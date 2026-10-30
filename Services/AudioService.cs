@@ -6,23 +6,56 @@ namespace WinIsland.Services;
 public sealed class AudioService : IDisposable
 {
     private readonly DispatcherTimer _poll = new() { Interval = TimeSpan.FromMilliseconds(300) };
+    private readonly DispatcherTimer _devicePoll = new() { Interval = TimeSpan.FromSeconds(2) };
     private CoreAudio.IAudioEndpointVolume? _endpoint;
     private DateTime _nextRetry = DateTime.MinValue;
     private bool _muted;
     private float _volume;
     private bool _initialized;
+    private string _deviceId = string.Empty;
 
     public bool IsAvailable => _endpoint is not null;
     public float Volume => _volume;
     public bool IsMuted => _muted;
 
     public event Action<float, bool>? Changed;
+    public event Action? DevicesChanged;
 
     public void Start()
     {
         TryInitialize();
         _poll.Tick += (_, _) => Poll();
         _poll.Start();
+        _devicePoll.Tick += (_, _) => PollDefaultDevice();
+        _devicePoll.Start();
+    }
+
+    internal IReadOnlyList<CoreAudio.AudioEndpoint> GetOutputDevices()
+    {
+        return CoreAudio.GetRenderEndpoints();
+    }
+
+    internal bool SetDefaultDevice(string deviceId)
+    {
+        if (string.IsNullOrWhiteSpace(deviceId))
+        {
+            return false;
+        }
+
+        if (string.Equals(deviceId, _deviceId, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (!CoreAudio.SetDefaultRenderDevice(deviceId))
+        {
+            return false;
+        }
+
+        _deviceId = deviceId;
+        ReinitializeEndpoint();
+        DevicesChanged?.Invoke();
+        return true;
     }
 
     private void TryInitialize()
@@ -37,6 +70,7 @@ public sealed class AudioService : IDisposable
             _endpoint = CoreAudio.CreateEndpointVolume();
             if (_endpoint is not null)
             {
+                _deviceId = CoreAudio.GetDefaultRenderDeviceId() ?? string.Empty;
                 _endpoint.GetMasterVolumeLevelScalar(out _volume);
                 _endpoint.GetMute(out _muted);
                 _initialized = true;
@@ -133,9 +167,46 @@ public sealed class AudioService : IDisposable
         }
     }
 
+    private void PollDefaultDevice()
+    {
+        var id = CoreAudio.GetDefaultRenderDeviceId();
+        if (string.IsNullOrEmpty(_deviceId) ||
+            string.IsNullOrEmpty(id) ||
+            string.Equals(id, _deviceId, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _deviceId = id;
+        ReinitializeEndpoint();
+        DevicesChanged?.Invoke();
+    }
+
+    private void ReinitializeEndpoint()
+    {
+        if (_endpoint is not null)
+        {
+            try
+            {
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(_endpoint);
+            }
+            catch
+            {
+                // Ignore.
+            }
+
+            _endpoint = null;
+        }
+
+        _initialized = false;
+        _nextRetry = DateTime.MinValue;
+        TryInitialize();
+    }
+
     public void Dispose()
     {
         _poll.Stop();
+        _devicePoll.Stop();
         if (_endpoint is not null)
         {
             try

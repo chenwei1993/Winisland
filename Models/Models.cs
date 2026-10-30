@@ -60,6 +60,15 @@ public sealed class ClipboardItem
     };
 }
 
+public sealed class AudioOutputDevice
+{
+    public required string Id { get; init; }
+    public required string Name { get; init; }
+    public bool IsDefault { get; init; }
+    public string Glyph { get; init; } = "\uE7F4";
+    public string CheckGlyph => IsDefault ? "\uE73E" : string.Empty;
+}
+
 public sealed class ShelfItem
 {
     public required string Path { get; init; }

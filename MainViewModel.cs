@@ -41,6 +41,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private double _volumePercent;
     private bool _isMuted;
     private string _muteGlyph = "\uE767";
+    private string _outputDeviceName = "播放设备";
+    private string _outputDeviceGlyph = "\uE7F5";
 
     private double _brightnessPercent;
     private bool _isBrightnessAvailable;
@@ -89,6 +91,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         _s.Media.Updated += ApplyMedia;
         _s.Audio.Changed += (_, _) => ApplyAudio();
+        _s.Audio.DevicesChanged += RefreshOutputDevices;
         _s.Brightness.Changed += _ => ApplyBrightness();
         _s.Power.Updated += ApplyPower;
         _s.Monitor.Updated += ApplyMonitor;
@@ -106,6 +109,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         TickClock();
         ApplyMedia();
         ApplyAudio();
+        RefreshOutputDevices();
         ApplyBrightness();
         ApplyPower();
         ApplyMonitor();
@@ -307,6 +311,61 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         VolumePercent = Math.Round(_s.Audio.Volume * 100d, 1);
         IsMuted = _s.Audio.IsMuted;
         MuteGlyph = _s.Audio.IsMuted ? "\uE74F" : "\uE767";
+    }
+
+    public ObservableCollection<AudioOutputDevice> OutputDevices { get; } = new();
+
+    public string OutputDeviceName
+    {
+        get => _outputDeviceName;
+        private set => Set(ref _outputDeviceName, value);
+    }
+
+    public string OutputDeviceGlyph
+    {
+        get => _outputDeviceGlyph;
+        private set => Set(ref _outputDeviceGlyph, value);
+    }
+
+    public void RefreshOutputDevices()
+    {
+        var devices = _s.Audio.GetOutputDevices();
+        OutputDevices.Clear();
+
+        foreach (var device in devices)
+        {
+            OutputDevices.Add(new AudioOutputDevice
+            {
+                Id = device.Id,
+                Name = device.Name,
+                IsDefault = device.IsDefault,
+                Glyph = DeviceGlyph(device.FormFactor, device.Name)
+            });
+        }
+
+        var current = devices.FirstOrDefault(d => d.IsDefault);
+        OutputDeviceName = current?.Name ?? "未找到播放设备";
+        OutputDeviceGlyph = current is null ? "\uE7F5" : DeviceGlyph(current.FormFactor, current.Name);
+    }
+
+    private static string DeviceGlyph(int formFactor, string name)
+    {
+        if (formFactor is 3 or 5 ||
+            name.Contains("耳机", StringComparison.OrdinalIgnoreCase) ||
+            name.Contains("headphone", StringComparison.OrdinalIgnoreCase) ||
+            name.Contains("headset", StringComparison.OrdinalIgnoreCase))
+        {
+            return "\uE7F6";
+        }
+
+        if (formFactor is 8 or 9 ||
+            name.Contains("HDMI", StringComparison.OrdinalIgnoreCase) ||
+            name.Contains("显示器", StringComparison.OrdinalIgnoreCase))
+        {
+            return "\uE7F4";
+        }
+
+        return "\uE7F5";
     }
 
     // ── Brightness ───────────────────────────────────────────────────────

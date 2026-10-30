@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using WinIsland.Models;
 
 namespace WinIsland.Panes;
 
@@ -51,6 +52,36 @@ public partial class SystemView : UserControl
         {
             brightness.SetPercent(target);
         }
+    }
+
+    private void OutputDeviceButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (OutputDeviceMenu.Visibility == Visibility.Visible)
+        {
+            OutputDeviceMenu.Visibility = Visibility.Collapsed;
+            OutputDeviceChevron.Text = "\uE70D";
+            return;
+        }
+
+        if (DataContext is MainViewModel viewModel)
+        {
+            viewModel.RefreshOutputDevices();
+        }
+
+        OutputDeviceMenu.Visibility = Visibility.Visible;
+        OutputDeviceChevron.Text = "\uE70E";
+    }
+
+    private void OutputDevice_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: AudioOutputDevice device })
+        {
+            return;
+        }
+
+        OutputDeviceMenu.Visibility = Visibility.Collapsed;
+        OutputDeviceChevron.Text = "\uE70D";
+        App.Services.Audio.SetDefaultDevice(device.Id);
     }
 
     private static bool IsUserEditing(Slider slider)
