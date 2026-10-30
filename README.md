@@ -2,6 +2,7 @@
 
 一款为 Windows 打造的「灵动岛」：悬浮在屏幕顶部中央，把媒体、计时器、系统状态、剪贴板、文件与通知都收进一颗黑色药丸里。
 
+![alt text](image.png)
 ![WinIsland 预览](docs/preview.png)
 
 <p align="center"><img src="docs/compact.png" alt="紧凑形态" /></p>
