@@ -1,0 +1,133 @@
+<UserControl x:Class="WinIsland.Panes.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="440" d:DesignHeight="448">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="0,0,4,0">
+            <TextBlock Text="通用" Style="{StaticResource PaneTitle}" FontSize="13" Margin="2,0,0,7" />
+
+            <Border Style="{StaticResource Card}" Padding="12,9" Margin="0,0,0,6">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="开机自启" FontSize="11.5" />
+                        <TextBlock Text="登录 Windows 后自动启动灵动岛" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource Switch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding StartWithWindows, Mode=TwoWay}" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Padding="12,9" Margin="0,0,0,6">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="始终置顶" FontSize="11.5" />
+                        <TextBlock Text="让灵动岛悬浮在所有窗口之上" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource Switch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding AlwaysOnTop, Mode=TwoWay}" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Padding="12,9" Margin="0,0,0,6">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="全屏时自动隐藏" FontSize="11.5" />
+                        <TextBlock Text="看视频或玩游戏时暂时收起" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource Switch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding HideInFullscreen, Mode=TwoWay}" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Padding="12,9" Margin="0,0,0,6">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="通知音效" FontSize="11.5" />
+                        <TextBlock Text="收到通知时播放系统提示音" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource Switch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding PlaySound, Mode=TwoWay}" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Padding="12,9" Margin="0,0,0,6">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="系统通知" FontSize="11.5" />
+                        <TextBlock Text="把微信等应用的通知中心消息显示到岛上" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource Switch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding ShowSystemNotifications, Mode=TwoWay}" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Padding="12,9" Margin="0,0,0,6">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="贴边自动隐藏" FontSize="11.5" />
+                        <TextBlock Text="平时收起为顶部细线，鼠标移到顶部中央或出现事件时显示" Style="{StaticResource Caption}"
+                                   Margin="0,2,0,0" TextWrapping="Wrap" MaxWidth="280" HorizontalAlignment="Left" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource Switch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding EdgeAutoHide, Mode=TwoWay}" />
+                </Grid>
+            </Border>
+
+            <TextBlock Text="剪贴板" Style="{StaticResource PaneTitle}" FontSize="13" Margin="2,12,0,7" />
+            <Border Style="{StaticResource Card}" Padding="12,9" Margin="0,0,0,6">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="记录剪贴板" FontSize="11.5" />
+                        <TextBlock Text="复制的内容会出现在剪贴板面板中" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource Switch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding RecordClipboard, Mode=TwoWay}" />
+                </Grid>
+            </Border>
+
+            <TextBlock Text="接口与快捷键" Style="{StaticResource PaneTitle}" FontSize="13" Margin="2,12,0,7" />
+            <Border Style="{StaticResource Card}" Padding="12,10" Margin="0,0,0,6">
+                <StackPanel>
+                    <Grid Margin="0,0,0,6">
+                        <TextBlock Text="命名管道" Style="{StaticResource Caption}" />
+                        <TextBlock Text="{Binding PipeNameText}" FontSize="10" HorizontalAlignment="Right"
+                                   FontFamily="Cascadia Mono, Consolas" Foreground="{StaticResource TextSecondaryBrush}" />
+                    </Grid>
+                    <Grid Margin="0,0,0,5">
+                        <TextBlock Text="全局快捷键" Style="{StaticResource Caption}" />
+                        <TextBlock Text="Ctrl + Alt + I" FontSize="10" HorizontalAlignment="Right"
+                                   Foreground="{StaticResource TextSecondaryBrush}" />
+                    </Grid>
+                    <TextBlock Text="WinIsland.exe --notify &quot;标题&quot; &quot;内容&quot;" FontSize="9.5"
+                               FontFamily="Cascadia Mono, Consolas" Foreground="{StaticResource TextTertiaryBrush}"
+                               Margin="0,2,0,2" />
+                    <TextBlock Text="WinIsland.exe --timer 5 &quot;泡茶&quot;" FontSize="9.5"
+                               FontFamily="Cascadia Mono, Consolas" Foreground="{StaticResource TextTertiaryBrush}" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                <Button Content="发送测试通知" Style="{StaticResource GhostButton}" Click="Test_Click" />
+                <Button Content="打开数据目录" Style="{StaticResource GhostButton}" Margin="6,0,0,0"
+                        Click="OpenData_Click" />
+            </StackPanel>
+
+            <TextBlock Text="关于" Style="{StaticResource PaneTitle}" FontSize="13" Margin="2,16,0,7" />
+            <Border Style="{StaticResource Card}" Padding="12,10" Margin="0,0,0,6">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="WinIsland" FontSize="12" FontWeight="SemiBold" />
+                        <TextBlock Text="为 Windows 打造的灵动岛" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding VersionText}" Style="{StaticResource Caption}"
+                               HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+            <Button Content="退出 WinIsland" Style="{StaticResource GhostButton}" Foreground="{StaticResource RedBrush}"
+                    BorderBrush="#33FF453A" Margin="0,4,0,6" HorizontalAlignment="Left" Click="Exit_Click" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
