@@ -922,7 +922,7 @@ public partial class MainWindow : Window
 
             if (_smartRevealAt == DateTime.MinValue)
             {
-                _smartRevealAt = DateTime.Now.AddMilliseconds(350);
+                _smartRevealAt = DateTime.Now.AddMilliseconds(700);
                 return;
             }
 
@@ -1013,19 +1013,39 @@ public partial class MainWindow : Window
         }
 
         var dpi = VisualTreeHelper.GetDpi(this);
-        var padX = (int)Math.Round(10 * dpi.DpiScaleX);
-        var padY = (int)Math.Round(8 * dpi.DpiScaleY);
         var centerX = rect.Left + (rect.Right - rect.Left) / 2;
-        var middleY = rect.Top + (rect.Bottom - rect.Top) / 2;
-        var belowY = rect.Bottom + padY;
+        var halfWidth = (int)Math.Round((CompactWidth / 2 + 12) * dpi.DpiScaleX);
+        var detectionBottom = rect.Top + (int)Math.Round((CompactHeight + 16) * dpi.DpiScaleY);
+        var middleY = rect.Top + (detectionBottom - rect.Top) / 2;
+
+        // Use a fixed footprint instead of the current sliver size. Otherwise a
+        // window under the full island stops covering the tiny sliver, making
+        // the island expand and hide forever.
+        var detection = new Native.RECT
+        {
+            Left = centerX - halfWidth,
+            Top = rect.Top,
+            Right = centerX + halfWidth,
+            Bottom = detectionBottom
+        };
+
+        var foreground = Native.GetForegroundWindow();
+        if (foreground != _hwnd &&
+            Native.GetWindowRect(foreground, out var foregroundRect) &&
+            Intersects(foregroundRect, detection) &&
+            IsAppWindow(foreground))
+        {
+            return true;
+        }
 
         Span<Native.POINT> points =
         [
-            new Native.POINT { X = centerX, Y = belowY },
-            new Native.POINT { X = rect.Left - padX, Y = middleY },
-            new Native.POINT { X = rect.Right + padX, Y = middleY },
-            new Native.POINT { X = rect.Left - padX, Y = belowY },
-            new Native.POINT { X = rect.Right + padX, Y = belowY }
+            new Native.POINT { X = centerX, Y = middleY },
+            new Native.POINT { X = centerX, Y = detectionBottom },
+            new Native.POINT { X = detection.Left, Y = middleY },
+            new Native.POINT { X = detection.Right, Y = middleY },
+            new Native.POINT { X = detection.Left, Y = detectionBottom },
+            new Native.POINT { X = detection.Right, Y = detectionBottom }
         ];
 
         foreach (var point in points)
@@ -1043,6 +1063,12 @@ public partial class MainWindow : Window
         }
 
         return false;
+    }
+
+    private static bool Intersects(Native.RECT a, Native.RECT b)
+    {
+        return a.Left < b.Right && a.Right > b.Left &&
+               a.Top < b.Bottom && a.Bottom > b.Top;
     }
 
     private bool IsAppWindow(IntPtr window)
