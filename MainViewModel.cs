@@ -846,9 +846,38 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             }
 
             _s.Settings.Current.EdgeAutoHide = value;
+            if (value)
+            {
+                _s.Settings.Current.SmartAvoidWindows = false;
+            }
+
             _s.Settings.Save();
-            App.Island?.ApplyEdgeMode(value);
             OnPropertyChanged();
+            OnPropertyChanged(nameof(SmartAvoidWindows));
+            App.Island?.ApplyVisibilityMode();
+        }
+    }
+
+    public bool SmartAvoidWindows
+    {
+        get => _s.Settings.Current.SmartAvoidWindows;
+        set
+        {
+            if (_s.Settings.Current.SmartAvoidWindows == value)
+            {
+                return;
+            }
+
+            _s.Settings.Current.SmartAvoidWindows = value;
+            if (value)
+            {
+                _s.Settings.Current.EdgeAutoHide = false;
+            }
+
+            _s.Settings.Save();
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(EdgeAutoHide));
+            App.Island?.ApplyVisibilityMode();
         }
     }
 

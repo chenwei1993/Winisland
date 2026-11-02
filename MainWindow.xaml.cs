@@ -27,6 +27,16 @@ public partial class MainWindow : Window
     private const double SliverWidth = 120;
     private const double SliverHeight = 4;
 
+    private static readonly HashSet<string> NonAppWindowClasses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd",
+        "NotifyIconOverflowWindow", "TopLevelWindowForOverflowXamlIsland",
+        "Windows.UI.Core.CoreWindow", "ApplicationManager_DesktopShellWindow",
+        "TaskSwitcherWnd", "MultitaskingViewFrame", "ForegroundStaging",
+        "XamlExplorerHostIslandWindow", "SysShadow", "MsgrIMEWindowClass", "IME",
+        "MSCTFIME UI", "tooltips_class32", "#32768"
+    };
+
     private enum Surface
     {
         Idle,
@@ -54,9 +64,12 @@ public partial class MainWindow : Window
     private bool _compactSeeking;
     private double _compactSeekFraction;
     private bool _edgeMode;
+    private bool _smartMode;
     private double _topInset = 8;
     private DateTime _edgeHideAt = DateTime.MinValue;
     private DateTime _edgeHoverSince = DateTime.MinValue;
+    private DateTime _smartHideAt = DateTime.MinValue;
+    private DateTime _smartRevealAt = DateTime.MinValue;
     private DateTime _suppressDeactivateUntil = DateTime.MinValue;
     private DateTime _lastMemoryTrim = DateTime.MinValue;
     private UserControl? _activePane;
@@ -87,7 +100,8 @@ public partial class MainWindow : Window
 
         Topmost = _s.Settings.Current.AlwaysOnTop;
         _edgeMode = _s.Settings.Current.EdgeAutoHide;
-        _topInset = _edgeMode ? 0 : 8;
+        _smartMode = !_edgeMode && _s.Settings.Current.SmartAvoidWindows;
+        _topInset = _edgeMode || _smartMode ? 0 : 8;
         SetWindowSize(_edgeMode ? SliverWidth : IdleWidth, _edgeMode ? SliverHeight : IdleHeight);
         SetIslandSize(_edgeMode ? SliverWidth : IdleWidth, _edgeMode ? SliverHeight : IdleHeight,
             _edgeMode ? SliverHeight / 2 : IdleHeight / 2);
@@ -261,49 +275,57 @@ public partial class MainWindow : Window
         }
     }
 
-    public void ApplyEdgeMode(bool enabled)
+    public void ApplyVisibilityMode()
     {
-        if (_edgeMode == enabled)
+        var edge = _s.Settings.Current.EdgeAutoHide;
+        var smart = !edge && _s.Settings.Current.SmartAvoidWindows;
+
+        _edgeMode = edge;
+        _smartMode = smart;
+        _topInset = edge || smart ? 0 : 8;
+        _edgeHideAt = DateTime.MinValue;
+        _edgeHoverSince = DateTime.MinValue;
+        _smartHideAt = DateTime.MinValue;
+        _smartRevealAt = DateTime.MinValue;
+
+        RepositionWindow();
+
+        if (_surface is Surface.Expanded or Surface.Drop)
+        {
+            SetWindowSizeAtomic(Width, Height);
+            return;
+        }
+
+        if (edge)
+        {
+            if (_surface != Surface.Sliver)
+            {
+                ShowSliver();
+            }
+
+            return;
+        }
+
+        if (smart && _surface == Surface.Sliver && IsIslandAreaCovered())
         {
             return;
         }
 
-        _edgeMode = enabled;
-        _topInset = enabled ? 0 : 8;
-        _edgeHideAt = DateTime.MinValue;
-        _edgeHoverSince = DateTime.MinValue;
-
-        if (enabled)
+        if (_surface == Surface.Sliver)
         {
-            if (_surface is Surface.Idle or Surface.Compact)
+            var activity = ResolveActivity();
+            if (activity is null)
             {
-                ShowSliver();
+                ShowIdle(force: true);
             }
-            else if (_surface is Surface.Expanded or Surface.Drop)
+            else
             {
-                SetWindowSizeAtomic(Width, Height);
+                ShowCompact(activity);
             }
         }
         else
         {
-            if (_surface == Surface.Sliver)
-            {
-                HideSliverFace();
-                _surface = Surface.Idle;
-                var activity = ResolveActivity();
-                if (activity is null)
-                {
-                    ShowIdle(force: true);
-                }
-                else
-                {
-                    ShowCompact(activity);
-                }
-            }
-            else
-            {
-                SetWindowSizeAtomic(Width, Height);
-            }
+            SetWindowSizeAtomic(Width, Height);
         }
     }
 
@@ -793,7 +815,7 @@ public partial class MainWindow : Window
 
     private void ShowSliver(bool animate = true)
     {
-        if (!_edgeMode || _surface is Surface.Expanded or Surface.Drop or Surface.Sliver)
+        if (!(_edgeMode || _smartMode) || _surface is Surface.Expanded or Surface.Drop or Surface.Sliver)
         {
             return;
         }
@@ -803,6 +825,8 @@ public partial class MainWindow : Window
         _transient = null;
         _edgeHideAt = DateTime.MinValue;
         _edgeHoverSince = DateTime.MinValue;
+        _smartHideAt = DateTime.MinValue;
+        _smartRevealAt = DateTime.MinValue;
 
         SliverFace.Visibility = Visibility.Visible;
         SetOpacity(SliverFace, 0);
@@ -829,7 +853,7 @@ public partial class MainWindow : Window
 
     private void RevealFromSliver()
     {
-        if (!_edgeMode || _surface != Surface.Sliver)
+        if (!(_edgeMode || _smartMode) || _surface != Surface.Sliver)
         {
             return;
         }
@@ -837,6 +861,8 @@ public partial class MainWindow : Window
         HideSliverFace();
         _edgeHideAt = DateTime.MinValue;
         _edgeHoverSince = DateTime.MinValue;
+        _smartHideAt = DateTime.MinValue;
+        _smartRevealAt = DateTime.MinValue;
 
         var activity = ResolveActivity();
         if (activity is null)
@@ -857,28 +883,52 @@ public partial class MainWindow : Window
 
     private void EdgeTick()
     {
-        if (!_edgeMode || _isAnimating || _fullscreenHidden || !IsVisible)
+        if ((!_edgeMode && !_smartMode) || _isAnimating || _fullscreenHidden || !IsVisible)
         {
             return;
         }
 
         if (_surface == Surface.Sliver)
         {
-            if (!IsCursorInEdgeHotZone())
+            if (IsCursorInEdgeHotZone())
             {
-                _edgeHoverSince = DateTime.MinValue;
+                if (_edgeHoverSince == DateTime.MinValue)
+                {
+                    _edgeHoverSince = DateTime.Now;
+                    return;
+                }
+
+                if ((DateTime.Now - _edgeHoverSince).TotalMilliseconds >= 250)
+                {
+                    _edgeHoverSince = DateTime.MinValue;
+                    RevealFromSliver();
+                }
+
                 return;
             }
 
-            if (_edgeHoverSince == DateTime.MinValue)
+            _edgeHoverSince = DateTime.MinValue;
+
+            if (!_smartMode)
             {
-                _edgeHoverSince = DateTime.Now;
                 return;
             }
 
-            if ((DateTime.Now - _edgeHoverSince).TotalMilliseconds >= 250)
+            if (IsIslandAreaCovered())
             {
-                _edgeHoverSince = DateTime.MinValue;
+                _smartRevealAt = DateTime.MinValue;
+                return;
+            }
+
+            if (_smartRevealAt == DateTime.MinValue)
+            {
+                _smartRevealAt = DateTime.Now.AddMilliseconds(350);
+                return;
+            }
+
+            if (DateTime.Now >= _smartRevealAt)
+            {
+                _smartRevealAt = DateTime.MinValue;
                 RevealFromSliver();
             }
 
@@ -888,6 +938,7 @@ public partial class MainWindow : Window
         if (_surface is Surface.Expanded or Surface.Drop)
         {
             _edgeHideAt = DateTime.MinValue;
+            _smartHideAt = DateTime.MinValue;
             return;
         }
 
@@ -899,6 +950,7 @@ public partial class MainWindow : Window
         if (_compactSeeking)
         {
             _edgeHideAt = DateTime.MinValue;
+            _smartHideAt = DateTime.MinValue;
             return;
         }
 
@@ -911,20 +963,111 @@ public partial class MainWindow : Window
         if (inside || _transient is not null)
         {
             _edgeHideAt = DateTime.MinValue;
+            _smartHideAt = DateTime.MinValue;
             return;
         }
 
-        if (_edgeHideAt == DateTime.MinValue)
+        if (_edgeMode)
         {
-            _edgeHideAt = DateTime.Now.AddSeconds(1.1);
+            if (_edgeHideAt == DateTime.MinValue)
+            {
+                _edgeHideAt = DateTime.Now.AddSeconds(1.1);
+                return;
+            }
+
+            if (DateTime.Now >= _edgeHideAt)
+            {
+                _edgeHideAt = DateTime.MinValue;
+                ShowSliver();
+            }
+
             return;
         }
 
-        if (DateTime.Now >= _edgeHideAt)
+        // Smart mode: stay visible until an app window actually occupies the
+        // area around the island, then shrink to the sliver.
+        if (!IsIslandAreaCovered())
         {
-            _edgeHideAt = DateTime.MinValue;
+            _smartHideAt = DateTime.MinValue;
+            return;
+        }
+
+        if (_smartHideAt == DateTime.MinValue)
+        {
+            _smartHideAt = DateTime.Now.AddMilliseconds(350);
+            return;
+        }
+
+        if (DateTime.Now >= _smartHideAt)
+        {
+            _smartHideAt = DateTime.MinValue;
             ShowSliver();
         }
+    }
+
+    private bool IsIslandAreaCovered()
+    {
+        if (_hwnd == IntPtr.Zero || !Native.GetWindowRect(_hwnd, out var rect))
+        {
+            return false;
+        }
+
+        var dpi = VisualTreeHelper.GetDpi(this);
+        var padX = (int)Math.Round(10 * dpi.DpiScaleX);
+        var padY = (int)Math.Round(8 * dpi.DpiScaleY);
+        var centerX = rect.Left + (rect.Right - rect.Left) / 2;
+        var middleY = rect.Top + (rect.Bottom - rect.Top) / 2;
+        var belowY = rect.Bottom + padY;
+
+        Span<Native.POINT> points =
+        [
+            new Native.POINT { X = centerX, Y = belowY },
+            new Native.POINT { X = rect.Left - padX, Y = middleY },
+            new Native.POINT { X = rect.Right + padX, Y = middleY },
+            new Native.POINT { X = rect.Left - padX, Y = belowY },
+            new Native.POINT { X = rect.Right + padX, Y = belowY }
+        ];
+
+        foreach (var point in points)
+        {
+            if (point.X < 0 || point.Y < 0)
+            {
+                continue;
+            }
+
+            var window = Native.WindowFromPoint(point);
+            if (IsAppWindow(window))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private bool IsAppWindow(IntPtr window)
+    {
+        if (window == IntPtr.Zero || window == _hwnd)
+        {
+            return false;
+        }
+
+        var root = Native.GetAncestor(window, Native.GA_ROOT);
+        if (root == IntPtr.Zero)
+        {
+            root = window;
+        }
+
+        if (root == _hwnd || !Native.IsWindowVisible(root))
+        {
+            return false;
+        }
+
+        var className = new StringBuilder(128);
+        Native.GetClassName(root, className, className.Capacity);
+        var cls = className.ToString();
+
+        return !NonAppWindowClasses.Contains(cls);
     }
 
     private bool IsCursorOverWindow()
@@ -1477,7 +1620,7 @@ public partial class MainWindow : Window
         _transient = activity;
         _transientUntil = DateTime.Now.AddSeconds(seconds);
 
-        if (_edgeMode && _surface == Surface.Sliver)
+        if ((_edgeMode || _smartMode) && _surface == Surface.Sliver)
         {
             _edgeHideAt = DateTime.Now.AddSeconds(seconds + 1.2);
             RevealFromSliver();
@@ -1609,7 +1752,7 @@ public partial class MainWindow : Window
     {
         Dispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle, new Action(() =>
         {
-            if (!_edgeMode || _surface != Surface.Sliver)
+            if (!(_edgeMode || _smartMode) || _surface != Surface.Sliver)
             {
                 return;
             }
@@ -1649,7 +1792,7 @@ public partial class MainWindow : Window
 
     private void Island_MouseEnter(object sender, MouseEventArgs e)
     {
-        if (_edgeMode && _surface == Surface.Sliver)
+        if ((_edgeMode || _smartMode) && _surface == Surface.Sliver)
         {
             RevealFromSliver();
         }
