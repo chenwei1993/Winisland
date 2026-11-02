@@ -852,6 +852,22 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    public bool ShowAppSwitches
+    {
+        get => _s.Settings.Current.ShowAppSwitches;
+        set
+        {
+            if (_s.Settings.Current.ShowAppSwitches == value)
+            {
+                return;
+            }
+
+            _s.Settings.Current.ShowAppSwitches = value;
+            _s.Settings.Save();
+            OnPropertyChanged();
+        }
+    }
+
     public string PipeNameText => NotificationPipeServer.DisplayName;
 
     public string VersionText => typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";

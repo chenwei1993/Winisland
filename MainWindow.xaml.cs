@@ -48,6 +48,7 @@ public partial class MainWindow : Window
     private DateTime _transientUntil;
     private DateTime _mediaHoldUntil = DateTime.MinValue;
     private bool _lastMediaPlaying;
+    private DateTime _lastAppSwitchShown = DateTime.MinValue;
     private bool _fullscreenHidden;
     private bool _initialized;
     private bool _compactSeeking;
@@ -1289,6 +1290,24 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (!info.IsNewlyOpened)
+        {
+            // Switching between already running apps is the noisiest event and
+            // tends to cover browser tabs. It is opt-in, and while media is
+            // playing the compact island should stay on Now Playing instead.
+            if (!_s.Settings.Current.ShowAppSwitches || _s.Media.Current.IsPlaying)
+            {
+                return;
+            }
+
+            if ((DateTime.Now - _lastAppSwitchShown).TotalSeconds < 4)
+            {
+                return;
+            }
+        }
+
+        _lastAppSwitchShown = DateTime.Now;
+
         var title = (info.IsNewlyOpened ? "已打开 " : "已切换到 ") + info.DisplayName;
         var subtitle = info.WindowTitle;
 
@@ -1306,7 +1325,7 @@ public partial class MainWindow : Window
             Subtitle = subtitle,
             Art = info.Icon,
             Accent = info.Icon is null ? AccentBrush : null
-        }, 3.2);
+        }, 2.8);
     }
 
     private void OnSystemNotification(SystemNotificationInfo info)

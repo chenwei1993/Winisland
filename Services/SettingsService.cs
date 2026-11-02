@@ -12,6 +12,7 @@ public sealed class AppSettings
     public bool PlaySound { get; set; }
     public bool ShowSystemNotifications { get; set; } = true;
     public bool EdgeAutoHide { get; set; } = true;
+    public bool ShowAppSwitches { get; set; }
 }
 
 public sealed class SettingsService
