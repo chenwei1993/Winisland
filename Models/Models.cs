@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Windows.Media;
@@ -73,6 +74,53 @@ public sealed class BudsEqualizerOption : ObservableObject
         get => _isSelected;
         set => Set(ref _isSelected, value);
     }
+}
+
+public sealed class BudsOptionChoice : ObservableObject
+{
+    public required string RowId { get; init; }
+    public required int Value { get; init; }
+    public required string Name { get; init; }
+
+    private bool _isSelected;
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => Set(ref _isSelected, value);
+    }
+}
+
+public sealed class BudsOptionRow : ObservableObject
+{
+    public required string Id { get; init; }
+    public required string Title { get; init; }
+    public string? Description { get; init; }
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+
+    public bool IsRange { get; init; }
+    public int Minimum { get; init; }
+    public int Maximum { get; init; }
+
+    private int _value;
+
+    public int Value
+    {
+        get => _value;
+        set
+        {
+            if (Set(ref _value, value))
+            {
+                OnPropertyChanged(nameof(ValueText));
+            }
+        }
+    }
+
+    public string ValueText => IsRange ? _value.ToString() : string.Empty;
+
+    public ObservableCollection<BudsOptionChoice> Choices { get; } = new();
+
+    public bool HasChoices => Choices.Count > 0;
 }
 
 public sealed class BudsDeviceOption

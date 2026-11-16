@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Windows.Threading;
 using EncoDeck.Bluetooth;
@@ -194,11 +195,17 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
 
     public bool HasMultipleDevices => Devices.Count > 1;
 
+    public ObservableCollection<BudsOptionRow> Options { get; } = new();
+
+    public bool HasOptions => IsConnected && Options.Count > 0;
+
     public bool HasEqualizer => IsConnected && EqualizerOptions.Count > 0;
 
     public bool CanGameMode => HasCapability(DeviceCapability.GamingMode);
     public bool CanWearDetection => HasCapability(DeviceCapability.InEarDetection);
     public bool CanDualDevice => HasCapability(DeviceCapability.DualDeviceConnection);
+    public bool CanFindEarbuds => HasCapability(DeviceCapability.FindMyEarbuds);
+    public bool CanFitTest => HasCapability(DeviceCapability.FitTest);
 
     public bool CanSpatialAudioModes => HasCapability(DeviceCapability.HeadTracking);
 
@@ -234,6 +241,30 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
         set => SetToggle(DeviceToggle.DualDeviceConnection, value);
     }
 
+    public bool IsFindingEarbuds => State.IsFindingEarbuds;
+
+    public string FindEarbudsText => IsFindingEarbuds ? "停止响铃" : "查找耳机";
+
+    public bool IsFitTestRunning => State.IsFitTestRunning;
+
+    public string FitTestButtonText => IsFitTestRunning ? "检测中…" : "贴合度检测";
+
+    public bool HasFitTestResult => State.FitTest is not null;
+
+    public string FitTestSummary
+    {
+        get
+        {
+            var result = State.FitTest;
+            if (result is null)
+            {
+                return string.Empty;
+            }
+
+            return $"贴合度：左耳 {FitText(result.Left)} · 右耳 {FitText(result.Right)}";
+        }
+    }
+
     public void SetNoiseControl(NoiseControlMode mode)
     {
         if (!IsConnected)
@@ -265,6 +296,37 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
 
         _ = _manager.SetSpatialAudioAsync(mode);
         QueueRefresh();
+    }
+
+    /// <summary>Writes a brand-specific option the earbuds reported themselves.</summary>
+    public void SetOption(string id, int value)
+    {
+        if (!IsConnected || string.IsNullOrWhiteSpace(id))
+        {
+            return;
+        }
+
+        _ = _manager.SetOptionAsync(id, value);
+    }
+
+    public void ToggleFindEarbuds()
+    {
+        if (!IsConnected)
+        {
+            return;
+        }
+
+        _ = _manager.FindEarbudsAsync(!State.IsFindingEarbuds);
+    }
+
+    public void RunFitTest()
+    {
+        if (!IsConnected || State.IsFitTestRunning)
+        {
+            return;
+        }
+
+        _ = _manager.RunFitTestAsync();
     }
 
     public async Task ReconnectAsync()
@@ -366,9 +428,82 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
 
         RefreshDevices();
         RefreshEqualizerOptions();
+        RefreshOptions();
         CheckLowBattery();
         UpdateConnectionNotification();
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
+    }
+
+    private void RefreshOptions()
+    {
+        var options = IsConnected
+            ? State.Options.Values
+                .Select(o => o.Value)
+                .OrderBy(o => o.Order)
+                .ThenBy(o => o.Id, StringComparer.Ordinal)
+                .ToArray()
+            : Array.Empty<DeviceOption>();
+
+        var same = Options.Count == options.Length;
+        if (same)
+        {
+            for (var i = 0; i < options.Length; i++)
+            {
+                if (!string.Equals(Options[i].Id, options[i].Id, StringComparison.Ordinal) ||
+                    Options[i].Choices.Count != options[i].Choices.Count)
+                {
+                    same = false;
+                    break;
+                }
+            }
+        }
+
+        if (!same)
+        {
+            Options.Clear();
+            foreach (var option in options)
+            {
+                var row = new BudsOptionRow
+                {
+                    Id = option.Id,
+                    Title = LocalizeOptionText(option.LabelKey),
+                    Description = option.DescriptionKey is { } descriptionKey
+                        ? LocalizeOptionText(descriptionKey)
+                        : null,
+                    IsRange = option.IsRange,
+                    Minimum = option.Minimum,
+                    Maximum = option.Maximum,
+                    Value = option.Value
+                };
+
+                foreach (var choice in option.Choices)
+                {
+                    row.Choices.Add(new BudsOptionChoice
+                    {
+                        RowId = option.Id,
+                        Value = choice.Value,
+                        Name = LocalizeChoice(choice)
+                    });
+                }
+
+                Options.Add(row);
+            }
+        }
+
+        foreach (var row in Options)
+        {
+            var option = options.FirstOrDefault(o => string.Equals(o.Id, row.Id, StringComparison.Ordinal));
+            if (option is null)
+            {
+                continue;
+            }
+
+            row.Value = option.Value;
+            foreach (var choice in row.Choices)
+            {
+                choice.IsSelected = choice.Value == option.Value;
+            }
+        }
     }
 
     private void RefreshDevices()
@@ -526,6 +661,57 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
             "eq-32" => "悠扬人声",
             _ => fallback
         };
+    }
+
+    private static readonly Dictionary<string, string> OptionText = new(StringComparer.Ordinal)
+    {
+        ["AutoOff_Title"] = "自动关机",
+        ["AutoOff_Off"] = "关闭",
+        ["AutoOff_WhenRemoved"] = "摘下时关闭",
+        ["AutoOff_Minutes"] = "{0} 分钟后",
+        ["AutoOff_IdleDescription"] = "耳机闲置达到所选时长后自动关机",
+        ["PowerOff_Timer"] = "定时关机",
+        ["PowerOff_Timer_Description"] = "到达所选时间后自动关闭耳机",
+        ["SonyOption_AmbientLevel"] = "环境声级别",
+        ["SonyOption_Unknown"] = "未知（0x{0}）",
+        ["SonyKey_Left"] = "左耳触控",
+        ["SonyKey_Right"] = "右耳触控",
+        ["SonyKey_Custom"] = "自定义按键",
+        ["SonyKey_NcAmbient"] = "降噪 / 环境声按键",
+        ["SonyKey_Other"] = "可分配按键",
+        ["SonyPreset_00"] = "环境声控制",
+        ["SonyPreset_10"] = "音量控制",
+        ["SonyPreset_20"] = "播放控制",
+        ["SonyPreset_21"] = "曲目控制",
+        ["SonyPreset_30"] = "语音助手",
+        ["SonyPreset_31"] = "Google 助理",
+        ["SonyPreset_32"] = "Amazon Alexa",
+        ["SonyPreset_35"] = "环境声控制 / 快速访问",
+        ["SonyPreset_36"] = "快速访问",
+        ["SonyPreset_45"] = "环境声控制（麦克风）",
+        ["SonyPreset_46"] = "聆听模式 / 快速访问",
+        ["SonyPreset_47"] = "环境声控制 / 聆听模式",
+        ["SonyPreset_FF"] = "无功能"
+    };
+
+    private static string LocalizeOptionText(string key) =>
+        OptionText.TryGetValue(key, out var text) ? text : key;
+
+    private static string FitText(FitQuality quality) => quality switch
+    {
+        FitQuality.Good => "良好",
+        FitQuality.Average => "一般",
+        FitQuality.Poor => "较差",
+        FitQuality.Failed => "失败",
+        _ => "未知"
+    };
+
+    private static string LocalizeChoice(DeviceOptionChoice choice)
+    {
+        var text = LocalizeOptionText(choice.LabelKey);
+        return string.IsNullOrEmpty(choice.Argument)
+            ? text
+            : string.Format(CultureInfo.CurrentCulture, text, choice.Argument);
     }
 
     private static string FormatBattery(int? level) => level is null ? "--" : $"{level}%";

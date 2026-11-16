@@ -232,7 +232,7 @@
                 </Grid>
             </Border>
 
-            <!-- OPPO / OnePlus / realme earbuds -->
+            <!-- Multi-brand earbuds -->
             <Border Style="{StaticResource Card}" Margin="0,10,0,0" Padding="13,10"
                     Visibility="{Binding Buds.HasDevice, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
@@ -399,6 +399,70 @@
                                   IsChecked="{Binding Buds.DualDevice, Mode=TwoWay}"
                                   Visibility="{Binding Buds.CanDualDevice, Converter={StaticResource BoolToVis}}" />
                     </WrapPanel>
+
+                    <WrapPanel Margin="0,2,0,0">
+                        <Button Content="{Binding Buds.FindEarbudsText}" Style="{StaticResource GhostButton}"
+                                Margin="2,4,8,0"
+                                Visibility="{Binding Buds.CanFindEarbuds, Converter={StaticResource BoolToVis}}"
+                                Click="BudsFind_Click" />
+                        <Button Content="{Binding Buds.FitTestButtonText}" Style="{StaticResource GhostButton}"
+                                Margin="0,4,8,0"
+                                Visibility="{Binding Buds.CanFitTest, Converter={StaticResource BoolToVis}}"
+                                Click="BudsFitTest_Click" />
+                        <TextBlock Text="{Binding Buds.FitTestSummary}" Style="{StaticResource Caption}"
+                                   VerticalAlignment="Center" Margin="0,4,0,0"
+                                   Visibility="{Binding Buds.HasFitTestResult, Converter={StaticResource BoolToVis}}" />
+                    </WrapPanel>
+
+                    <StackPanel Margin="0,6,0,0"
+                                Visibility="{Binding Buds.HasOptions, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="更多设置" Style="{StaticResource Caption}" Margin="2,0,0,2" />
+                        <ItemsControl ItemsSource="{Binding Buds.Options}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="2,5,14,0">
+                                        <TextBlock Text="{Binding Title}" FontSize="10.5"
+                                                   Foreground="{StaticResource TextSecondaryBrush}" />
+                                        <TextBlock Text="{Binding Description}" Style="{StaticResource Caption}"
+                                                   TextWrapping="Wrap" Margin="0,2,0,0"
+                                                   Visibility="{Binding HasDescription, Converter={StaticResource BoolToVis}}" />
+                                        <ItemsControl ItemsSource="{Binding Choices}" Margin="0,4,0,0"
+                                                      Visibility="{Binding HasChoices, Converter={StaticResource BoolToVis}}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <RadioButton Style="{StaticResource SegmentButton}"
+                                                                 Content="{Binding Name}" Margin="0,2,4,0"
+                                                                 IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                                                 Loaded="BudsOptionChoice_Loaded"
+                                                                 Click="BudsOptionChoice_Click" />
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <Grid Margin="0,3,0,0"
+                                              Visibility="{Binding IsRange, Converter={StaticResource BoolToVis}}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Slider Style="{StaticResource VolumeSlider}" Margin="0,0,8,0"
+                                                    Minimum="{Binding Minimum}" Maximum="{Binding Maximum}"
+                                                    Value="{Binding Value, Mode=OneWay}"
+                                                    Tag="{Binding Id}"
+                                                    ValueChanged="BudsOption_ValueChanged" />
+                                            <TextBlock Grid.Column="1" Text="{Binding ValueText}" FontSize="10"
+                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                       VerticalAlignment="Center" />
+                                        </Grid>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

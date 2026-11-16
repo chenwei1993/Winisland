@@ -143,6 +143,43 @@ public partial class SystemView : UserControl
         }
     }
 
+    private void BudsOptionChoice_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is RadioButton { DataContext: BudsOptionChoice choice } button)
+        {
+            // GroupName is not a dependency property, so it cannot be bound.
+            button.GroupName = "BudsOption_" + choice.RowId;
+        }
+    }
+
+    private void BudsOptionChoice_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { DataContext: BudsOptionChoice choice })
+        {
+            App.Services.Buds.SetOption(choice.RowId, choice.Value);
+        }
+    }
+
+    private void BudsFind_Click(object sender, RoutedEventArgs e)
+    {
+        App.Services.Buds.ToggleFindEarbuds();
+    }
+
+    private void BudsFitTest_Click(object sender, RoutedEventArgs e)
+    {
+        App.Services.Buds.RunFitTest();
+    }
+
+    private void BudsOption_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (!_ready || sender is not Slider { Tag: string id } slider || !IsUserEditing(slider))
+        {
+            return;
+        }
+
+        App.Services.Buds.SetOption(id, (int)Math.Round(e.NewValue));
+    }
+
     private static bool IsUserEditing(Slider slider)
     {
         return slider.IsKeyboardFocusWithin || slider.IsMouseCaptureWithin || slider.IsStylusCaptureWithin;
