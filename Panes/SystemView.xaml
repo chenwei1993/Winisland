@@ -303,10 +303,15 @@
                     </WrapPanel>
 
                     <WrapPanel Margin="0,4,0,0">
-                        <CheckBox Content="游戏模式" FontSize="10.5" Margin="2,4,14,0"
-                                  Foreground="{StaticResource TextSecondaryBrush}"
-                                  IsChecked="{Binding Buds.GameMode, Mode=TwoWay}"
-                                  Visibility="{Binding Buds.CanGameMode, Converter={StaticResource BoolToVis}}" />
+                        <StackPanel Orientation="Horizontal" Margin="2,4,14,0"
+                                    ToolTip="开启后降低耳机蓝牙音频延迟，适合游戏；可能影响连接稳定性和续航"
+                                    Visibility="{Binding Buds.CanGameMode, Converter={StaticResource BoolToVis}}">
+                            <CheckBox Content="游戏模式" FontSize="10.5"
+                                      Foreground="{StaticResource TextSecondaryBrush}"
+                                      IsChecked="{Binding Buds.GameMode, Mode=TwoWay}" />
+                            <TextBlock Text="降低音频延迟，适合游戏" Style="{StaticResource Caption}"
+                                       VerticalAlignment="Center" Margin="7,0,0,0" />
+                        </StackPanel>
                         <CheckBox Content="佩戴检测" FontSize="10.5" Margin="2,4,14,0"
                                   Foreground="{StaticResource TextSecondaryBrush}"
                                   IsChecked="{Binding Buds.WearDetection, Mode=TwoWay}"
