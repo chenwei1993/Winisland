@@ -1,6 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
-using OppoPods.Core;
+using EncoDeck.Core.State;
 using WinIsland.Models;
 
 namespace WinIsland.Panes;
@@ -110,7 +110,7 @@ public partial class SystemView : UserControl
 
     private void BudsEq_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is FrameworkElement { Tag: int presetId })
+        if (sender is FrameworkElement { Tag: string presetId })
         {
             App.Services.Buds.SetEqualizer(presetId);
         }

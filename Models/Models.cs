@@ -63,7 +63,7 @@ public sealed class ClipboardItem
 
 public sealed class BudsEqualizerOption : ObservableObject
 {
-    public required int Id { get; init; }
+    public required string Id { get; init; }
     public required string Name { get; init; }
 
     private bool _isSelected;

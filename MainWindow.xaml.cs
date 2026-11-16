@@ -1500,7 +1500,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        PushAlert("耳机电量偏低", $"{side}剩余 {percent}%，建议放回充电盒。", "OPPO 耳机", "warning", 5);
+        PushAlert("耳机电量偏低", $"{side}剩余 {percent}%，建议放回充电盒。", "蓝牙耳机", "warning", 5);
     }
 
     private void OnClipboardItemAdded(ClipboardItem item)

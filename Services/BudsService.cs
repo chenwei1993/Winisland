@@ -1,42 +1,70 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Windows.Threading;
-using OppoPods.Core;
-using OppoPods.Session;
+using EncoDeck.Bluetooth;
+using EncoDeck.Bluetooth.LeAudio;
+using EncoDeck.Bluetooth.Rfcomm;
+using EncoDeck.Core.Capabilities;
+using EncoDeck.Core.Devices;
+using EncoDeck.Core.Profiles;
+using EncoDeck.Core.State;
+using EncoDeck.Protocol.Brands;
+using Microsoft.Extensions.Logging.Abstractions;
 using WinIsland.Models;
 
 namespace WinIsland.Services;
 
 /// <summary>
-/// Bridges the vendored OPPO/OnePlus/realme RFCOMM control session into the
-/// island. The upstream session raises updates on WinRT threads, so every
-/// notification is marshalled back to the WPF dispatcher here.
+/// Multi-brand earbuds control built on EncoDeck's device engine. It discovers
+/// paired devices, opens the vendor control channel, and projects the shared
+/// device state into the island's small control card.
 /// </summary>
 public sealed class BudsService : INotifyPropertyChanged, IDisposable
 {
     private readonly Dispatcher _dispatcher;
-    private readonly AppModel _model = new();
-    private readonly SemaphoreSlim _connectionGate = new(1, 1);
+    private readonly DeviceStateStore _store = new();
+    private readonly DeviceManager _manager;
+    private readonly EventHandler<DeviceStateChangedEventArgs> _stateChangedHandler;
+    private readonly EventHandler _knownDevicesChangedHandler;
+    private readonly EventHandler<DeviceIdentity> _linkConnectedHandler;
 
     private bool _started;
     private bool _disposed;
     private bool _refreshQueued;
     private bool _leftLowAlerted;
     private bool _rightLowAlerted;
-    private bool? _lastReportedConnected;
+    private bool? _lastLinkUp;
 
     public BudsService()
     {
         _dispatcher = Dispatcher.CurrentDispatcher;
-        _model.PropertyChanged += OnModelPropertyChanged;
-        _model.Session.PropertyChanged += OnSessionPropertyChanged;
-        _model.Session.ConnectionStateChanged += _ => QueueRefresh();
-        _model.Repository.DeviceConnectionChanged += OnDeviceConnectionChanged;
+        LeAudioOnlyDevices.Configure(Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "WinIsland",
+            "le-audio-devices.json"));
+
+        var registry = new DeviceProfileRegistry(BuiltInProfiles.Create());
+        _manager = new DeviceManager(
+            registry,
+            _store,
+            new RfcommChannelConnector(registry),
+            preferredDeviceId: () => null,
+            allowExperimental: () => false,
+            NullLoggerFactory.Instance);
+
+        _stateChangedHandler = (_, _) => QueueRefresh();
+        _knownDevicesChangedHandler = (_, _) => QueueRefresh();
+        _linkConnectedHandler = (_, _) => QueueRefresh();
+
+        _store.StateChanged += _stateChangedHandler;
+        _manager.KnownDevicesChanged += _knownDevicesChangedHandler;
+        _manager.ActiveDeviceLinkConnected += _linkConnectedHandler;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    /// <summary>Raised when the selected earbuds connect/disconnect in Windows Bluetooth.</summary>
+    /// <summary>Raised when the active earbuds connect or disconnect.</summary>
     public event Action<bool, string>? ConnectionChanged;
 
     /// <summary>Raised once when an earbud crosses below 20% while discharging.</summary>
@@ -44,41 +72,41 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
 
     public void Start()
     {
-        if (_started)
+        if (_started || _disposed)
         {
             return;
         }
 
         _started = true;
-        _model.AutoConnect = true;
-        _ = ConnectInitialAsync();
+        _manager.Start();
     }
 
-    public bool HasDevice =>
-        _model.SelectedDevice is not null ||
-        !string.IsNullOrEmpty(_model.SelectedDeviceAddress);
+    private DeviceState State => _store.Current;
 
-    public bool IsConnected =>
-        _model.Session.ConnectionState.Kind == ConnectionStateKind.Connected;
+    private IDeviceProfile? Profile => State.Profile;
+
+    public bool HasDevice => State.Device is not null || _manager.KnownDevices.Count > 0;
+
+    public bool IsConnected => State.Connection == DeviceConnectionState.ControlReady;
 
     public string DeviceName
     {
         get
         {
-            var name = _model.Session.DeviceName;
-            if (string.IsNullOrWhiteSpace(name) || name == "未知设备")
+            var name = State.Device?.Name;
+            if (string.IsNullOrWhiteSpace(name))
             {
-                name = _model.SelectedDevice?.DisplayName ?? "OPPO 耳机";
+                name = Profile?.DisplayName;
             }
 
-            return name;
+            return string.IsNullOrWhiteSpace(name) ? "耳机" : name;
         }
     }
 
     public string ProductIdText =>
-        string.IsNullOrWhiteSpace(_model.Session.ProductID)
-            ? "未识别型号"
-            : $"产品 ID {_model.Session.ProductID}";
+        State.ProductId is { } productId
+            ? $"产品 ID {productId:X6}"
+            : Profile?.DisplayName ?? "未识别型号";
 
     public string StatusText
     {
@@ -86,24 +114,21 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
         {
             if (!HasDevice)
             {
-                return "未找到已配对的 OPPO / OnePlus / realme 耳机";
+                return "未找到已配对的耳机";
             }
 
-            if (IsConnected)
+            return State.Connection switch
             {
-                return $"已连接 · {DetailText}";
-            }
-
-            if (!string.IsNullOrWhiteSpace(_model.ConnectionPrerequisiteMessage))
-            {
-                return _model.ConnectionPrerequisiteMessage;
-            }
-
-            return _model.Session.ConnectionState.Kind switch
-            {
-                ConnectionStateKind.Connecting => "正在连接控制通道…",
-                ConnectionStateKind.Failed => "连接失败：" +
-                    (_model.Session.ConnectionState.Error ?? "请确认耳机已连接系统蓝牙"),
+                DeviceConnectionState.PairedNotConnected => "已配对，等待连接",
+                DeviceConnectionState.AudioConnected => "已连接，正在打开控制通道…",
+                DeviceConnectionState.ControlConnecting => "正在连接控制通道…",
+                DeviceConnectionState.ControlReady => $"已连接 · {DetailText}",
+                DeviceConnectionState.ControlUnavailable => "控制通道不可用",
+                DeviceConnectionState.Reconnecting => "连接丢失，正在重连…",
+                DeviceConnectionState.Disconnected => "已断开",
+                DeviceConnectionState.DisconnectedByUser => "已在应用中断开",
+                DeviceConnectionState.UsbReceiverConnected => "USB 接收器已连接",
+                DeviceConnectionState.UsbHeadsetConnected => $"USB 耳机已连接 · {DetailText}",
                 _ => "等待系统蓝牙连接"
             };
         }
@@ -112,12 +137,12 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
     public bool HasBattery =>
         IsConnected && (LeftBattery is not null || RightBattery is not null);
 
-    public int? LeftBattery => _model.Session.Battery.Left?.Level;
-    public int? RightBattery => _model.Session.Battery.Right?.Level;
-    public int? CaseBattery => _model.Session.Battery.ChargingCase?.Level;
-    public bool LeftCharging => _model.Session.Battery.Left?.IsCharging == true;
-    public bool RightCharging => _model.Session.Battery.Right?.IsCharging == true;
-    public bool CaseCharging => _model.Session.Battery.ChargingCase?.IsCharging == true;
+    public int? LeftBattery => State.Battery.Left?.Value.Level;
+    public int? RightBattery => State.Battery.Right?.Value.Level;
+    public int? CaseBattery => State.Battery.Case?.Value.Level;
+    public bool LeftCharging => State.Battery.Left?.Value.IsCharging == true;
+    public bool RightCharging => State.Battery.Right?.Value.IsCharging == true;
+    public bool CaseCharging => State.Battery.Case?.Value.IsCharging == true;
 
     public string LeftBatteryText => FormatBattery(LeftBattery);
     public string RightBatteryText => FormatBattery(RightBattery);
@@ -145,93 +170,64 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
         }
     }
 
-    public NoiseControlMode NoiseMode => _model.Session.NoiseControl;
+    public NoiseControlMode NoiseMode => State.NoiseControl?.Value.Mode ?? NoiseControlMode.Off;
 
     public bool IsNoiseOff => NoiseMode == NoiseControlMode.Off;
     public bool IsNoiseCancellation => NoiseMode == NoiseControlMode.NoiseCancellation;
     public bool IsNoiseTransparency => NoiseMode == NoiseControlMode.Transparency;
     public bool IsNoiseAdaptive => NoiseMode == NoiseControlMode.Adaptive;
 
-    public bool CanNoiseControl => IsConnected &&
-        _model.Session.Capabilities.IndexByNoiseMode.Count > 0;
+    public bool CanNoiseControl => HasCapability(DeviceCapability.NoiseCancellation);
 
-    public bool CanNoiseCancellation => CanNoiseControl &&
-        _model.Session.Capabilities.IndexByNoiseMode.ContainsKey(NoiseControlMode.NoiseCancellation);
+    public bool CanNoiseCancellation => Profile?.NoiseControlOptions.Any(o =>
+        o.Mode == NoiseControlMode.NoiseCancellation && o.Support != CapabilitySupport.Unsupported) == true;
 
-    public bool CanNoiseTransparency => CanNoiseControl &&
-        _model.Session.Capabilities.IndexByNoiseMode.ContainsKey(NoiseControlMode.Transparency);
+    public bool CanNoiseTransparency => Profile?.NoiseControlOptions.Any(o =>
+        o.Mode == NoiseControlMode.Transparency && o.Support != CapabilitySupport.Unsupported) == true;
 
-    public bool CanNoiseAdaptive => CanNoiseControl &&
-        _model.Session.Capabilities.IndexByNoiseMode.ContainsKey(NoiseControlMode.Adaptive);
+    public bool CanNoiseAdaptive => Profile?.NoiseControlOptions.Any(o =>
+        o.Mode == NoiseControlMode.Adaptive && o.Support != CapabilitySupport.Unsupported) == true;
 
     public ObservableCollection<BudsEqualizerOption> EqualizerOptions { get; } = new();
 
     public bool HasEqualizer => IsConnected && EqualizerOptions.Count > 0;
 
-    public bool CanGameMode => IsConnected && _model.Session.Capabilities.HasGameMode;
-    public bool CanWearDetection => IsConnected && _model.Session.Capabilities.HasWearDetection;
-    public bool CanDualDevice => IsConnected && _model.Session.Capabilities.HasDualDevice;
-    public bool CanSpatialSound => IsConnected &&
-        _model.Session.Capabilities.HasSpatialSound &&
-        !_model.Session.Capabilities.HasSpatialAudioModes;
+    public bool CanGameMode => HasCapability(DeviceCapability.GamingMode);
+    public bool CanWearDetection => HasCapability(DeviceCapability.InEarDetection);
+    public bool CanDualDevice => HasCapability(DeviceCapability.DualDeviceConnection);
 
-    public bool CanSpatialAudioModes => IsConnected && _model.Session.Capabilities.HasSpatialAudioModes;
+    public bool CanSpatialAudioModes => HasCapability(DeviceCapability.HeadTracking);
+
+    public bool CanSpatialSound =>
+        HasCapability(DeviceCapability.SpatialAudio) && !CanSpatialAudioModes;
 
     public bool SpatialSound
     {
-        get => _model.Session.SpatialSound;
-        set
-        {
-            if (IsConnected && _model.Session.SpatialSound != value)
-            {
-                _model.Session.SetSpatialSound(value);
-                QueueRefresh();
-            }
-        }
+        get => Toggle(DeviceToggle.SpatialAudio) == true;
+        set => SetToggle(DeviceToggle.SpatialAudio, value);
     }
 
-    public SpatialAudioMode SpatialAudioMode => _model.Session.SpatialAudio;
+    public SpatialAudioMode SpatialAudioMode => State.Spatial?.Value ?? SpatialAudioMode.Off;
     public bool IsSpatialAudioOff => SpatialAudioMode == SpatialAudioMode.Off;
     public bool IsSpatialAudioFixed => SpatialAudioMode == SpatialAudioMode.Fixed;
     public bool IsSpatialAudioHeadTracking => SpatialAudioMode == SpatialAudioMode.HeadTracking;
 
     public bool GameMode
     {
-        get => _model.Session.GameMode;
-        set
-        {
-            if (IsConnected && _model.Session.GameMode != value)
-            {
-                _model.Session.SetGameMode(value);
-                QueueRefresh();
-            }
-        }
+        get => Toggle(DeviceToggle.GamingMode) == true;
+        set => SetToggle(DeviceToggle.GamingMode, value);
     }
 
     public bool WearDetection
     {
-        get => _model.Session.WearDetection;
-        set
-        {
-            if (IsConnected && _model.Session.WearDetection != value)
-            {
-                _model.Session.SetWearDetection(value);
-                QueueRefresh();
-            }
-        }
+        get => Toggle(DeviceToggle.InEarDetection) == true;
+        set => SetToggle(DeviceToggle.InEarDetection, value);
     }
 
     public bool DualDevice
     {
-        get => _model.Session.DualDevice;
-        set
-        {
-            if (IsConnected && _model.Session.DualDevice != value)
-            {
-                _model.Session.SetDualDevice(value);
-                QueueRefresh();
-            }
-        }
+        get => Toggle(DeviceToggle.DualDeviceConnection) == true;
+        set => SetToggle(DeviceToggle.DualDeviceConnection, value);
     }
 
     public void SetNoiseControl(NoiseControlMode mode)
@@ -241,18 +237,18 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
             return;
         }
 
-        _model.Session.SetNoiseControl(mode);
+        _ = _manager.SetNoiseControlAsync(new NoiseControlState(mode));
         QueueRefresh();
     }
 
-    public void SetEqualizer(int presetId)
+    public void SetEqualizer(string presetId)
     {
-        if (!IsConnected)
+        if (!IsConnected || string.IsNullOrWhiteSpace(presetId))
         {
             return;
         }
 
-        _model.Session.SetEQ(presetId);
+        _ = _manager.SetEqualizerPresetAsync(presetId);
         QueueRefresh();
     }
 
@@ -263,7 +259,7 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
             return;
         }
 
-        _model.Session.SetSpatialAudio(mode);
+        _ = _manager.SetSpatialAudioAsync(mode);
         QueueRefresh();
     }
 
@@ -271,12 +267,18 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
     {
         try
         {
-            _model.RefreshDevices();
-            await _model.ConnectSelectedDeviceAsync();
+            if (State.Device is { } device)
+            {
+                await _manager.ConnectDeviceAsync(device.DeviceId);
+            }
+            else
+            {
+                await _manager.ReconnectAsync();
+            }
         }
         catch
         {
-            // The session exposes the failure through its state.
+            // The state store exposes the failure.
         }
 
         QueueRefresh();
@@ -286,103 +288,25 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
     {
         if (IsConnected)
         {
-            _model.Session.Refresh();
+            _ = _manager.RefreshAsync();
         }
     }
 
-    private async Task ConnectInitialAsync()
+    private bool HasCapability(DeviceCapability capability) =>
+        IsConnected && Profile?.Capabilities.IsAvailable(capability, allowExperimental: false) == true;
+
+    private bool? Toggle(DeviceToggle toggle) =>
+        State.Toggles.TryGetValue(toggle, out var value) ? value.Value : null;
+
+    private void SetToggle(DeviceToggle toggle, bool value)
     {
-        try
-        {
-            await Task.Delay(2_000);
-            if (!_started || _disposed)
-            {
-                return;
-            }
-
-            _model.RefreshDevices();
-            if (_model.SelectedDeviceIsSystemConnected)
-            {
-                await _model.ConnectSelectedDeviceAsync();
-            }
-        }
-        catch
-        {
-            // The card will show the session state instead.
-        }
-    }
-
-    private void OnModelPropertyChanged(object? sender, PropertyChangedEventArgs e) => QueueRefresh();
-
-    private void OnSessionPropertyChanged(object? sender, PropertyChangedEventArgs e) => QueueRefresh();
-
-    private void OnDeviceConnectionChanged(ulong address)
-    {
-        var selected = _model.SelectedDeviceAddress;
-        if (string.IsNullOrEmpty(selected) ||
-            !string.Equals(address.ToString("X12"), selected, StringComparison.OrdinalIgnoreCase))
+        if (!IsConnected || Toggle(toggle) == value)
         {
             return;
         }
 
-        _ = ReportConnectionAsync(address);
-    }
-
-    private async Task ReportConnectionAsync(ulong address)
-    {
-        await _connectionGate.WaitAsync();
-        try
-        {
-            bool connected;
-            try
-            {
-                connected = await _model.Repository.IsDeviceConnectedAsync(address);
-            }
-            catch
-            {
-                return;
-            }
-
-            if (_lastReportedConnected == connected)
-            {
-                return;
-            }
-
-            _lastReportedConnected = connected;
-            var name = _model.SelectedDevice?.DisplayName;
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                name = _model.Session.DeviceName;
-            }
-
-            if (string.IsNullOrWhiteSpace(name) || name == "未知设备")
-            {
-                name = "OPPO 耳机";
-            }
-
-            PostToUi(() => ConnectionChanged?.Invoke(connected, name));
-        }
-        finally
-        {
-            _connectionGate.Release();
-        }
-    }
-
-    private void PostToUi(Action action)
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        if (_dispatcher.CheckAccess())
-        {
-            action();
-        }
-        else
-        {
-            _dispatcher.BeginInvoke(action, DispatcherPriority.Background);
-        }
+        _ = _manager.SetToggleAsync(toggle, value);
+        QueueRefresh();
     }
 
     private void QueueRefresh()
@@ -420,22 +344,25 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
 
         RefreshEqualizerOptions();
         CheckLowBattery();
+        UpdateConnectionNotification();
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
     }
 
     private void RefreshEqualizerOptions()
     {
-        var presets = IsConnected
-            ? _model.Session.EqualizerPresets
+        var presets = IsConnected && Profile is { } profile
+            ? profile.EqualizerPresets
+                .Where(p => p.Support != CapabilitySupport.Unsupported)
+                .ToArray()
             : Array.Empty<EqualizerPreset>();
 
-        var same = EqualizerOptions.Count == presets.Count;
+        var same = EqualizerOptions.Count == presets.Length;
         if (same)
         {
-            for (var i = 0; i < presets.Count; i++)
+            for (var i = 0; i < presets.Length; i++)
             {
-                if (EqualizerOptions[i].Id != presets[i].Id ||
-                    !string.Equals(EqualizerOptions[i].Name, presets[i].Name, StringComparison.Ordinal))
+                if (!string.Equals(EqualizerOptions[i].Id, presets[i].Id, StringComparison.Ordinal) ||
+                    !string.Equals(EqualizerOptions[i].Name, presets[i].DisplayName, StringComparison.Ordinal))
                 {
                     same = false;
                     break;
@@ -451,16 +378,35 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
                 EqualizerOptions.Add(new BudsEqualizerOption
                 {
                     Id = preset.Id,
-                    Name = preset.Name
+                    Name = LocalizeEqualizerName(preset.Id, preset.DisplayName)
                 });
             }
         }
 
-        var selected = _model.Session.SelectedEQ;
+        var selected = State.Equalizer?.Value.ActivePresetId;
         foreach (var option in EqualizerOptions)
         {
-            option.IsSelected = option.Id == selected;
+            option.IsSelected = string.Equals(option.Id, selected, StringComparison.Ordinal);
         }
+    }
+
+    private void UpdateConnectionNotification()
+    {
+        var up = State.Connection.IsLinkUp();
+        if (_lastLinkUp is null)
+        {
+            _lastLinkUp = up;
+            return;
+        }
+
+        if (_lastLinkUp == up)
+        {
+            return;
+        }
+
+        _lastLinkUp = up;
+        var name = DeviceName;
+        PostToUi(() => ConnectionChanged?.Invoke(up, name));
     }
 
     private void CheckLowBattery()
@@ -472,28 +418,56 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
             return;
         }
 
-        CheckSide(_model.Session.Battery.Left, "左耳", ref _leftLowAlerted);
-        CheckSide(_model.Session.Battery.Right, "右耳", ref _rightLowAlerted);
+        CheckSide(State.Battery.Left?.Value, "左耳", ref _leftLowAlerted);
+        CheckSide(State.Battery.Right?.Value, "右耳", ref _rightLowAlerted);
     }
 
-    private void CheckSide(BatteryLevel? battery, string side, ref bool alerted)
+    private void CheckSide(BatteryReading? battery, string side, ref bool alerted)
     {
-        if (battery is null)
+        if (battery?.Level is not { } level)
         {
             return;
         }
 
-        if (battery.IsCharging || battery.Level > 25)
+        if (battery.IsCharging == true || level > 25)
         {
             alerted = false;
             return;
         }
 
-        if (battery.Level <= 20 && !alerted)
+        if (level <= 20 && !alerted)
         {
             alerted = true;
-            LowBattery?.Invoke(side, battery.Level);
+            LowBattery?.Invoke(side, level);
         }
+    }
+
+    private void PostToUi(Action action)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (_dispatcher.CheckAccess())
+        {
+            action();
+        }
+        else
+        {
+            _dispatcher.BeginInvoke(action, DispatcherPriority.Background);
+        }
+    }
+
+    private static string LocalizeEqualizerName(string id, string fallback)
+    {
+        return id switch
+        {
+            "eq-22" => "纯原音",
+            "eq-31" => "脉冲低音",
+            "eq-32" => "悠扬人声",
+            _ => fallback
+        };
     }
 
     private static string FormatBattery(int? level) => level is null ? "--" : $"{level}%";
@@ -507,9 +481,17 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
 
         _disposed = true;
         _started = false;
-        _model.PropertyChanged -= OnModelPropertyChanged;
-        _model.Session.PropertyChanged -= OnSessionPropertyChanged;
-        _model.Repository.DeviceConnectionChanged -= OnDeviceConnectionChanged;
-        _model.Dispose();
+        _store.StateChanged -= _stateChangedHandler;
+        _manager.KnownDevicesChanged -= _knownDevicesChangedHandler;
+        _manager.ActiveDeviceLinkConnected -= _linkConnectedHandler;
+
+        try
+        {
+            _manager.DisposeAsync().AsTask().Wait(TimeSpan.FromSeconds(2));
+        }
+        catch
+        {
+            // Best effort shutdown.
+        }
     }
 }
