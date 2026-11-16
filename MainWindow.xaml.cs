@@ -125,6 +125,7 @@ public partial class MainWindow : Window
         _s.Timers.Updated += OnTimersUpdated;
         _s.Timers.CountdownCompleted += OnCountdownCompleted;
         _s.Apps.Changed += OnForegroundAppChanged;
+        _s.Buds.ConnectionChanged += OnBudsConnectionChanged;
         _s.Buds.LowBattery += OnBudsLowBattery;
         _s.SystemNotifications.Received += OnSystemNotification;
 
@@ -232,6 +233,7 @@ public partial class MainWindow : Window
         _s.Timers.Updated -= OnTimersUpdated;
         _s.Timers.CountdownCompleted -= OnCountdownCompleted;
         _s.Apps.Changed -= OnForegroundAppChanged;
+        _s.Buds.ConnectionChanged -= OnBudsConnectionChanged;
         _s.Buds.LowBattery -= OnBudsLowBattery;
         _s.SystemNotifications.Received -= OnSystemNotification;
 
@@ -1436,6 +1438,24 @@ public partial class MainWindow : Window
     private void OnLowBattery(int percent)
     {
         PushAlert("电量偏低", $"剩余 {percent}%，建议连接电源。", "电源", "warning", 4);
+    }
+
+    private void OnBudsConnectionChanged(bool connected, string name)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(new Action(() => OnBudsConnectionChanged(connected, name)));
+            return;
+        }
+
+        ShowTransient(new LiveActivity
+        {
+            Kind = ActivityKind.App,
+            Glyph = "\uE7F6",
+            Title = connected ? "耳机已连接" : "耳机已断开",
+            Subtitle = name,
+            Accent = connected ? Green : Orange
+        }, connected ? 3.0 : 2.6);
     }
 
     private void OnBudsLowBattery(string side, int percent)

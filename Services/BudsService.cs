@@ -14,12 +14,14 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
 {
     private readonly Dispatcher _dispatcher;
     private readonly AppModel _model = new();
+    private readonly SemaphoreSlim _connectionGate = new(1, 1);
 
     private bool _started;
     private bool _disposed;
     private bool _refreshQueued;
     private bool _leftLowAlerted;
     private bool _rightLowAlerted;
+    private bool? _lastReportedConnected;
 
     public BudsService()
     {
@@ -27,9 +29,13 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
         _model.PropertyChanged += OnModelPropertyChanged;
         _model.Session.PropertyChanged += OnSessionPropertyChanged;
         _model.Session.ConnectionStateChanged += _ => QueueRefresh();
+        _model.Repository.DeviceConnectionChanged += OnDeviceConnectionChanged;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>Raised when the selected earbuds connect/disconnect in Windows Bluetooth.</summary>
+    public event Action<bool, string>? ConnectionChanged;
 
     /// <summary>Raised once when an earbud crosses below 20% while discharging.</summary>
     public event Action<string, int>? LowBattery;
@@ -273,6 +279,75 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
 
     private void OnSessionPropertyChanged(object? sender, PropertyChangedEventArgs e) => QueueRefresh();
 
+    private void OnDeviceConnectionChanged(ulong address)
+    {
+        var selected = _model.SelectedDeviceAddress;
+        if (string.IsNullOrEmpty(selected) ||
+            !string.Equals(address.ToString("X12"), selected, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _ = ReportConnectionAsync(address);
+    }
+
+    private async Task ReportConnectionAsync(ulong address)
+    {
+        await _connectionGate.WaitAsync();
+        try
+        {
+            bool connected;
+            try
+            {
+                connected = await _model.Repository.IsDeviceConnectedAsync(address);
+            }
+            catch
+            {
+                return;
+            }
+
+            if (_lastReportedConnected == connected)
+            {
+                return;
+            }
+
+            _lastReportedConnected = connected;
+            var name = _model.SelectedDevice?.DisplayName;
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                name = _model.Session.DeviceName;
+            }
+
+            if (string.IsNullOrWhiteSpace(name) || name == "未知设备")
+            {
+                name = "OPPO 耳机";
+            }
+
+            PostToUi(() => ConnectionChanged?.Invoke(connected, name));
+        }
+        finally
+        {
+            _connectionGate.Release();
+        }
+    }
+
+    private void PostToUi(Action action)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (_dispatcher.CheckAccess())
+        {
+            action();
+        }
+        else
+        {
+            _dispatcher.BeginInvoke(action, DispatcherPriority.Background);
+        }
+    }
+
     private void QueueRefresh()
     {
         if (_disposed)
@@ -356,6 +431,7 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
         _started = false;
         _model.PropertyChanged -= OnModelPropertyChanged;
         _model.Session.PropertyChanged -= OnSessionPropertyChanged;
+        _model.Repository.DeviceConnectionChanged -= OnDeviceConnectionChanged;
         _model.Dispose();
     }
 }
