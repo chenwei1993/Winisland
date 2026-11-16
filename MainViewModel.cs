@@ -92,6 +92,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _s.Media.Updated += ApplyMedia;
         _s.Audio.Changed += (_, _) => ApplyAudio();
         _s.Audio.DevicesChanged += RefreshOutputDevices;
+        _s.Buds.PropertyChanged += (_, _) => OnPropertyChanged(nameof(HasIdleStatus));
         _s.Brightness.Changed += _ => ApplyBrightness();
         _s.Power.Updated += ApplyPower;
         _s.Monitor.Updated += ApplyMonitor;
@@ -412,7 +413,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         private set => Set(ref _batteryDisplayText, value);
     }
 
-    public bool HasIdleStatus => HasBattery || MicInUse || CameraInUse || CapsLockOn;
+    public bool HasIdleStatus =>
+        HasBattery || MicInUse || CameraInUse || CapsLockOn || _s.Buds.HasBattery;
 
     public string PowerStateText
     {
@@ -896,6 +898,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             OnPropertyChanged();
         }
     }
+
+    public BudsService Buds => _s.Buds;
 
     public string PipeNameText => NotificationPipeServer.DisplayName;
 

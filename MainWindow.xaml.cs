@@ -125,6 +125,7 @@ public partial class MainWindow : Window
         _s.Timers.Updated += OnTimersUpdated;
         _s.Timers.CountdownCompleted += OnCountdownCompleted;
         _s.Apps.Changed += OnForegroundAppChanged;
+        _s.Buds.LowBattery += OnBudsLowBattery;
         _s.SystemNotifications.Received += OnSystemNotification;
 
         _presentTimer.Tick += (_, _) => OnPresentTimer();
@@ -231,6 +232,7 @@ public partial class MainWindow : Window
         _s.Timers.Updated -= OnTimersUpdated;
         _s.Timers.CountdownCompleted -= OnCountdownCompleted;
         _s.Apps.Changed -= OnForegroundAppChanged;
+        _s.Buds.LowBattery -= OnBudsLowBattery;
         _s.SystemNotifications.Received -= OnSystemNotification;
 
         Vm.Dispose();
@@ -1434,6 +1436,17 @@ public partial class MainWindow : Window
     private void OnLowBattery(int percent)
     {
         PushAlert("电量偏低", $"剩余 {percent}%，建议连接电源。", "电源", "warning", 4);
+    }
+
+    private void OnBudsLowBattery(string side, int percent)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(new Action(() => OnBudsLowBattery(side, percent)));
+            return;
+        }
+
+        PushAlert("耳机电量偏低", $"{side}剩余 {percent}%，建议放回充电盒。", "OPPO 耳机", "warning", 5);
     }
 
     private void OnClipboardItemAdded(ClipboardItem item)

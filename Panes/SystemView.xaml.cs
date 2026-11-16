@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using OppoPods.Core;
 using WinIsland.Models;
 
 namespace WinIsland.Panes;
@@ -15,7 +16,14 @@ public partial class SystemView : UserControl
         // Sliders are created with Value=0 before the bindings are applied. Only
         // forward changes that come from real user input, otherwise opening this
         // pane would apply that transient 0 and mute the system / dim the monitor.
-        Loaded += (_, _) => _ready = true;
+        Loaded += (_, _) =>
+        {
+            _ready = true;
+            if (DataContext is MainViewModel viewModel)
+            {
+                viewModel.RefreshOutputDevices();
+            }
+        };
         Unloaded += (_, _) => _ready = false;
     }
 
@@ -82,6 +90,22 @@ public partial class SystemView : UserControl
         OutputDeviceMenu.Visibility = Visibility.Collapsed;
         OutputDeviceChevron.Text = "\uE70D";
         App.Services.Audio.SetDefaultDevice(device.Id);
+    }
+
+    private async void BudsReconnect_Click(object sender, RoutedEventArgs e)
+    {
+        await App.Services.Buds.ReconnectAsync();
+    }
+
+    private void BudsNoise_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string tag } ||
+            !Enum.TryParse<NoiseControlMode>(tag, out var mode))
+        {
+            return;
+        }
+
+        App.Services.Buds.SetNoiseControl(mode);
     }
 
     private static bool IsUserEditing(Slider slider)

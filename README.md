@@ -22,6 +22,7 @@
 - 倒计时 / 秒表：剩余时间、进度环，计时结束自动提醒
 - 音量、亮度实时 HUD（系统音量变化、DDC/CI 显示器亮度变化都会触发）
 - 系统页可直接切换扬声器 / 耳机 / HDMI 等播放设备，默认设备变化时自动刷新
+- OPPO / OnePlus / realme 耳机：左右耳与充电盒电量、降噪模式、游戏模式，低电量上岛提醒
 - 复制文本 / 图片 / 文件时的剪贴板提示
 - 通知横幅：带图标与颜色分级（info / success / warning / error / timer）
 - 拖入文件时自动展开为放置区，松手加入文件架
@@ -33,7 +34,7 @@
 | 正在播放 | 封面、曲目信息、可拖动进度条（紧凑态也可拖动）、播放控制、音量 |
 | 计时器 | 1/3/5/10/25 分钟预设、暂停/继续、+1 分钟、秒表 |
 | 日历 | 月视图、今日高亮、月份切换、实时时钟与周数 |
-| 系统 | CPU / 内存 / 网络速率实时曲线，电池、音量、亮度、播放设备切换、网络适配器、磁盘、运行时长，麦克风/摄像头/大写锁定状态 |
+| 系统 | CPU / 内存 / 网络速率实时曲线，电池、音量、亮度、播放设备切换、OPPO 耳机电量与降噪、网络适配器、磁盘、运行时长，麦克风/摄像头/大写锁定状态 |
 | 剪贴板 | 最近 30 条文本 / 文件、4 条图片（压缩后保存）、点击回填、暂停记录、清空 |
 | 文件架 | 拖入/拖出文件与文件夹、缩略图、打开、移除，重启后保留 |
 | 通知 | 外部程序推送的通知中心，未读角标、全部清除 |
@@ -50,6 +51,7 @@
 - 全屏应用（视频、游戏）自动隐藏
 - 单实例运行；再次启动会把命令转发给已运行的岛
 - 媒体信息通过 Windows SMTC 获取，支持系统里所有媒体应用
+- OPPO / OnePlus / realme 耳机通过厂商 RFCOMM 控制通道读取电量与控制降噪，需要耳机先在系统蓝牙中连接
 
 ## 快速开始
 
@@ -119,7 +121,7 @@ dotnet publish .\WinIsland.csproj -c Release -r win-x64 --self-contained true `
 | 反复切换完全部面板后 | 约 160 MB | 约 275 MB |
 | 旧的压缩单文件版本 | 约 160–197 MB | 约 321–367 MB |
 
-工作集包含可被系统回收的缓存页，持续增长时应以私有内存为准。如果还需要进一步压低，下一步可以把托盘从 WinForms `NotifyIcon` 换成原生 `Shell_NotifyIcon`，去掉 WinForms / System.Drawing 依赖，预计还能省十几 MB。
+工作集包含可被系统回收的缓存页，持续增长时应以私有内存为准。启用 OPPO 耳机控制后，蓝牙设备枚举与 RFCOMM 会话通常会让私有内存再增加约 5–15 MB。如果还需要进一步压低，下一步可以把托盘从 WinForms `NotifyIcon` 换成原生 `Shell_NotifyIcon`，去掉 WinForms / System.Drawing 依赖，预计还能省十几 MB。
 
 ## 通知 API
 
@@ -170,6 +172,7 @@ WinIsland.exe --collapse
 
 - 设置：`%AppData%\WinIsland\settings.json`
 - 文件架：`%AppData%\WinIsland\shelf.json`
+- 耳机偏好：`%AppData%\OppoPods\settings.json`
 - 崩溃日志：`%AppData%\WinIsland\crash.log`
 - 调试日志：设置环境变量 `WINISLAND_DEBUG=1` 后写入 `debug.log`
 
@@ -185,6 +188,7 @@ Services/                媒体、音量、亮度、电源、系统监控、剪�
 Panes/                   展开面板的 8 个页面
 Controls/                RingProgress / Sparkline 自绘控件
 Interop/                 Win32、Core Audio、DDC/CI、全局鼠标钩子
+Vendor/OppoPods.*        OPPO / OnePlus / realme 耳机协议与控制会话（GPL-3.0）
 Themes/Theme.xaml        配色、字体、按钮 / 滑杆 / 开关 / 滚动条样式
 samples/                 PowerShell 通知示例
 publish.ps1              生成免安装单文件 exe
@@ -200,3 +204,15 @@ dist/                    生成好的 WinIsland.exe
 - 岛固定在主屏顶部中央；暂不支持拖拽位置、多屏选择与皮肤换色。
 - 剪贴板会记录复制内容，敏感环境请关闭记录。
 - 全屏检测基于前台窗口覆盖整个屏幕，极少数无边框窗口可能被误判。
+- 耳机控制仅支持 OPPO / OnePlus / realme 的 HeyMelody RFCOMM 协议；耳机必须先连接系统蓝牙。实际可用的降噪 / EQ / 游戏模式取决于型号与固件。
+- 耳机同一时间通常只允许一个厂商控制客户端；运行官方 HeyMelody 或 OPPO Pods for Windows 时可能争用控制通道。
+- 耳机协议是社区逆向结果，固件更新后可能失效；连接失败不会影响岛的其他功能。
+
+## 开源许可
+
+WinIsland 以 **GPL-3.0** 发布，因为包含了
+[OppoPodsWindows](https://github.com/3295074384/OppoPodsWindows) 的耳机协议实现。
+完整条款见 [`LICENSE`](LICENSE)，第三方归属与来源见
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。
+
+本项目与 OPPO、OnePlus、realme、HeyTap、HeyMelody 或 Microsoft 没有官方关联。

@@ -12,6 +12,7 @@ public sealed class ServiceHub : IDisposable
     public ShelfService Shelf { get; }
     public TimerService Timers { get; }
     public MediaService Media { get; }
+    public BudsService Buds { get; }
     public MicCameraWatcher Sensors { get; }
     public ForegroundAppWatcher Apps { get; }
     public SystemNotificationWatcher SystemNotifications { get; }
@@ -33,6 +34,7 @@ public sealed class ServiceHub : IDisposable
         Shelf = new ShelfService(Settings);
         Timers = new TimerService();
         Media = new MediaService();
+        Buds = new BudsService();
         Sensors = new MicCameraWatcher();
         Apps = new ForegroundAppWatcher();
         SystemNotifications = new SystemNotificationWatcher();
@@ -55,12 +57,14 @@ public sealed class ServiceHub : IDisposable
         SystemNotifications.Start();
         Pipes.Start();
         _ = Media.StartAsync();
+        Buds.Start();
     }
 
     public void Dispose()
     {
         Pipes.Dispose();
         Media.Dispose();
+        Buds.Dispose();
         SystemNotifications.Dispose();
         Apps.Dispose();
         Sensors.Dispose();

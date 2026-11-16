@@ -232,6 +232,93 @@
                 </Grid>
             </Border>
 
+            <!-- OPPO / OnePlus / realme earbuds -->
+            <Border Style="{StaticResource Card}" Margin="0,10,0,0" Padding="13,10"
+                    Visibility="{Binding Buds.HasDevice, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <Grid>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Buds.DeviceName}" FontSize="11.5" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Buds.StatusText}" Style="{StaticResource Caption}"
+                                       TextWrapping="Wrap" MaxWidth="300" HorizontalAlignment="Left"
+                                       Margin="0,2,0,0" />
+                        </StackPanel>
+                        <Button Content="重新连接" Style="{StaticResource GhostButton}"
+                                HorizontalAlignment="Right" VerticalAlignment="Center"
+                                Click="BudsReconnect_Click" />
+                    </Grid>
+
+                    <Grid Margin="0,9,0,0"
+                          Visibility="{Binding Buds.IsConnected, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="左耳" Style="{StaticResource Caption}" />
+                            <TextBlock Text="{Binding Buds.LeftBatteryText}" FontSize="17" FontWeight="SemiBold"
+                                       FontFamily="{StaticResource DisplayFont}" Margin="0,1,0,0" />
+                            <ProgressBar Style="{StaticResource ThinProgress}" Maximum="100"
+                                         Value="{Binding Buds.LeftBattery, Mode=OneWay, TargetNullValue=0}"
+                                         Margin="0,3,10,0" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="右耳" Style="{StaticResource Caption}" />
+                            <TextBlock Text="{Binding Buds.RightBatteryText}" FontSize="17" FontWeight="SemiBold"
+                                       FontFamily="{StaticResource DisplayFont}" Margin="0,1,0,0" />
+                            <ProgressBar Style="{StaticResource ThinProgress}" Maximum="100"
+                                         Value="{Binding Buds.RightBattery, Mode=OneWay, TargetNullValue=0}"
+                                         Margin="0,3,10,0" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="充电盒" Style="{StaticResource Caption}" />
+                            <TextBlock Text="{Binding Buds.CaseBatteryText}" FontSize="17" FontWeight="SemiBold"
+                                       FontFamily="{StaticResource DisplayFont}" Margin="0,1,0,0" />
+                            <ProgressBar Style="{StaticResource ThinProgress}" Maximum="100"
+                                         Value="{Binding Buds.CaseBattery, Mode=OneWay, TargetNullValue=0}"
+                                         Margin="0,3,0,0" />
+                        </StackPanel>
+                    </Grid>
+
+                    <WrapPanel Margin="0,8,0,0"
+                               Visibility="{Binding Buds.CanNoiseControl, Converter={StaticResource BoolToVis}}">
+                        <RadioButton Style="{StaticResource SegmentButton}" Content="关闭" GroupName="BudsNoise"
+                                     Tag="Off" IsChecked="{Binding Buds.IsNoiseOff, Mode=OneWay}"
+                                     Click="BudsNoise_Click" />
+                        <RadioButton Style="{StaticResource SegmentButton}" Content="降噪" GroupName="BudsNoise"
+                                     Tag="NoiseCancellation"
+                                     IsChecked="{Binding Buds.IsNoiseCancellation, Mode=OneWay}"
+                                     Visibility="{Binding Buds.CanNoiseCancellation, Converter={StaticResource BoolToVis}}"
+                                     Click="BudsNoise_Click" />
+                        <RadioButton Style="{StaticResource SegmentButton}" Content="通透" GroupName="BudsNoise"
+                                     Tag="Transparency"
+                                     IsChecked="{Binding Buds.IsNoiseTransparency, Mode=OneWay}"
+                                     Visibility="{Binding Buds.CanNoiseTransparency, Converter={StaticResource BoolToVis}}"
+                                     Click="BudsNoise_Click" />
+                        <RadioButton Style="{StaticResource SegmentButton}" Content="自适应" GroupName="BudsNoise"
+                                     Tag="Adaptive" IsChecked="{Binding Buds.IsNoiseAdaptive, Mode=OneWay}"
+                                     Visibility="{Binding Buds.CanNoiseAdaptive, Converter={StaticResource BoolToVis}}"
+                                     Click="BudsNoise_Click" />
+                    </WrapPanel>
+
+                    <WrapPanel Margin="0,4,0,0">
+                        <CheckBox Content="游戏模式" FontSize="10.5" Margin="2,4,14,0"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  IsChecked="{Binding Buds.GameMode, Mode=TwoWay}"
+                                  Visibility="{Binding Buds.CanGameMode, Converter={StaticResource BoolToVis}}" />
+                        <CheckBox Content="佩戴检测" FontSize="10.5" Margin="2,4,14,0"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  IsChecked="{Binding Buds.WearDetection, Mode=TwoWay}"
+                                  Visibility="{Binding Buds.CanWearDetection, Converter={StaticResource BoolToVis}}" />
+                        <CheckBox Content="双设备" FontSize="10.5" Margin="2,4,14,0"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  IsChecked="{Binding Buds.DualDevice, Mode=TwoWay}"
+                                  Visibility="{Binding Buds.CanDualDevice, Converter={StaticResource BoolToVis}}" />
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
             <TextBlock Text="设备状态" Style="{StaticResource PaneTitle}" Margin="2,14,0,8" FontSize="13" />
             <WrapPanel>
                 <Border Margin="0,0,6,6">

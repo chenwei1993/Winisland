@@ -28,4 +28,18 @@
         <Resource Include="Assets\island.ico" />
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="Vendor\OppoPods.Core\OppoPods.Core.csproj" />
+        <ProjectReference Include="Vendor\OppoPods.Session\OppoPods.Session.csproj" />
+    </ItemGroup>
+
+    <!-- Vendored projects build separately; keep their sources out of the WPF app. -->
+    <ItemGroup>
+        <Compile Remove="Vendor\**\*.cs" />
+        <EmbeddedResource Remove="Vendor\**\*" />
+        <Page Remove="Vendor\**\*.xaml" />
+        <ApplicationDefinition Remove="Vendor\**\*.xaml" />
+        <None Remove="Vendor\**\*" />
+    </ItemGroup>
+
 </Project>

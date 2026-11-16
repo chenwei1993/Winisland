@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\device_models.json" />
+    <EmbeddedResource Include="Resources\eq_mode_names.json" />
+    <EmbeddedResource Include="Resources\eq_mode_names.en.json" />
+  </ItemGroup>
+
+</Project>
