@@ -17,15 +17,16 @@ namespace WinIsland;
 
 public partial class MainWindow : Window
 {
-    private const double IdleWidth = 272;    private const double IdleHeight = 40;
-    private const double CompactWidth = 424;
-    private const double CompactHeight = 56;
-    private const double ExpandedWidth = 600;
-    private const double ExpandedHeight = 520;
-    private const double DropWidth = 420;
-    private const double DropHeight = 120;
-    private const double SliverWidth = 120;
-    private const double SliverHeight = 4;
+    private const double IdleWidth = 304;
+    private const double IdleHeight = 46;
+    private const double CompactWidth = 468;
+    private const double CompactHeight = 62;
+    private const double ExpandedWidth = 640;
+    private const double ExpandedHeight = 560;
+    private const double DropWidth = 460;
+    private const double DropHeight = 132;
+    private const double SliverWidth = 140;
+    private const double SliverHeight = 5;
 
     private static readonly HashSet<string> NonAppWindowClasses = new(StringComparer.OrdinalIgnoreCase)
     {

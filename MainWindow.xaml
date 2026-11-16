@@ -6,7 +6,7 @@
         xmlns:ctrl="clr-namespace:WinIsland.Controls"
         mc:Ignorable="d"
         Title="WinIsland"
-        Width="272" Height="40"
+        Width="304" Height="46"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -30,8 +30,8 @@
         Closing="Window_Closing">
 
     <Grid Background="Transparent">
-        <Border x:Name="IslandBorder" Width="272" Height="40" HorizontalAlignment="Center"
-                VerticalAlignment="Top" Background="#FF0A0A0C" BorderThickness="1" CornerRadius="20"
+        <Border x:Name="IslandBorder" Width="304" Height="46" HorizontalAlignment="Center"
+                VerticalAlignment="Top" Background="#FF0A0A0C" BorderThickness="1" CornerRadius="23"
                 ClipToBounds="True"
                 MouseLeftButtonUp="Island_MouseLeftButtonUp"
                 MouseRightButtonUp="Island_MouseRightButtonUp"
@@ -48,42 +48,42 @@
             </Border.Style>
             <Grid>
                 <!-- ── Idle ─────────────────────────────────────────────── -->
-                <Grid x:Name="IdleFace" Height="40" HorizontalAlignment="Center"
+                <Grid x:Name="IdleFace" Height="46" HorizontalAlignment="Center"
                       VerticalAlignment="Top" Cursor="Hand" IsHitTestVisible="True">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
-                                VerticalAlignment="Center" Margin="14,0">
+                                VerticalAlignment="Center" Margin="16,0">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding TimeText}" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Text="{Binding TimeText}" FontSize="15" FontWeight="SemiBold"
                                        VerticalAlignment="Center" />
                             <Ellipse Width="3" Height="3" Fill="{StaticResource TextTertiaryBrush}"
-                                     Margin="7,0" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding DateText}" FontSize="10"
+                                     Margin="8,0" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding DateText}" FontSize="11"
                                        Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
                         </StackPanel>
 
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="22,0,0,0"
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="24,0,0,0"
                                     Visibility="{Binding HasIdleStatus, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="&#xE720;" FontFamily="{StaticResource IconFont}" FontSize="11"
+                            <TextBlock Text="&#xE720;" FontFamily="{StaticResource IconFont}" FontSize="12"
                                        Foreground="{StaticResource RedBrush}" VerticalAlignment="Center" Margin="0,0,5,0"
                                        ToolTip="麦克风正在使用"
                                        Visibility="{Binding MicInUse, Converter={StaticResource BoolToVis}}" />
-                            <TextBlock Text="&#xE722;" FontFamily="{StaticResource IconFont}" FontSize="11"
+                            <TextBlock Text="&#xE722;" FontFamily="{StaticResource IconFont}" FontSize="12"
                                        Foreground="{StaticResource GreenBrush}" VerticalAlignment="Center" Margin="0,0,5,0"
                                        ToolTip="摄像头正在使用"
                                        Visibility="{Binding CameraInUse, Converter={StaticResource BoolToVis}}" />
                             <Border Background="#1F6C8CFF" CornerRadius="3" Padding="3,1" Margin="0,0,6,0"
                                     VerticalAlignment="Center"
                                     Visibility="{Binding CapsLockOn, Converter={StaticResource BoolToVis}}">
-                                <TextBlock Text="A" FontSize="8" FontWeight="Bold"
+                                <TextBlock Text="A" FontSize="9" FontWeight="Bold"
                                            Foreground="{StaticResource AccentBrush}" />
                             </Border>
 
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
                                         Visibility="{Binding HasBattery, Converter={StaticResource BoolToVis}}">
-                                <Border Width="18" Height="9" CornerRadius="2.5" BorderBrush="#59FFFFFF"
+                                <Border Width="20" Height="10" CornerRadius="2.5" BorderBrush="#59FFFFFF"
                                         BorderThickness="1" Margin="0,0,5,0" VerticalAlignment="Center">
                                     <Grid Margin="1.5">
-                                        <Border Height="4" CornerRadius="1" HorizontalAlignment="Left"
+                                        <Border Height="5" CornerRadius="1" HorizontalAlignment="Left"
                                                 Width="{Binding BatteryPercent, Converter={StaticResource BatteryFillWidth}}">
                                             <Border.Style>
                                                 <Style TargetType="{x:Type Border}">
@@ -98,16 +98,16 @@
                                         </Border>
                                     </Grid>
                                 </Border>
-                                <TextBlock Text="{Binding BatteryPercent, StringFormat={}{0}%}" FontSize="10"
+                                <TextBlock Text="{Binding BatteryPercent, StringFormat={}{0}%}" FontSize="11"
                                            Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0"
                                         ToolTip="{Binding Buds.DetailText}"
                                         Visibility="{Binding Buds.HasBattery, Converter={StaticResource BoolToVis}}">
-                                <TextBlock Text="&#xE7F6;" FontFamily="{StaticResource IconFont}" FontSize="11"
+                                <TextBlock Text="&#xE7F6;" FontFamily="{StaticResource IconFont}" FontSize="12"
                                            Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding Buds.CompactText}" FontSize="10"
+                                <TextBlock Text="{Binding Buds.CompactText}" FontSize="11"
                                            Foreground="{StaticResource TextSecondaryBrush}"
                                            VerticalAlignment="Center" Margin="4,0,0,0" />
                             </StackPanel>
@@ -116,37 +116,38 @@
                 </Grid>
 
                 <!-- ── Compact live activity ─────────────────────────────── -->
-                <Grid x:Name="CompactFace" Width="424" Height="56" HorizontalAlignment="Center"
+                <Grid x:Name="CompactFace" Width="468" Height="62" HorizontalAlignment="Center"
                       VerticalAlignment="Top" Visibility="Collapsed" Opacity="0" Cursor="Hand"
-                      IsHitTestVisible="False">                    <Grid.RowDefinitions>
+                      IsHitTestVisible="False">
+                    <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Grid Margin="12,7,12,6">
+                    <Grid Margin="14,8,14,7">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <Grid Width="34" Height="34" VerticalAlignment="Center">
-                            <Border x:Name="CompactArtTile" CornerRadius="10" Background="{StaticResource IconTileBrush}">
+                        <Grid Width="38" Height="38" VerticalAlignment="Center">
+                            <Border x:Name="CompactArtTile" CornerRadius="11" Background="{StaticResource IconTileBrush}">
                                 <TextBlock x:Name="CompactGlyph" Text="&#xE768;"
-                                           FontFamily="{StaticResource IconFont}" FontSize="15"
+                                           FontFamily="{StaticResource IconFont}" FontSize="17"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <Border x:Name="CompactArtHost" CornerRadius="10" Visibility="Collapsed">
+                            <Border x:Name="CompactArtHost" CornerRadius="11" Visibility="Collapsed">
                                 <Border.Background>
                                     <ImageBrush x:Name="CompactArtBrush" Stretch="UniformToFill" />
                                 </Border.Background>
                             </Border>
                         </Grid>
 
-                        <StackPanel Grid.Column="1" Margin="10,0,8,0" VerticalAlignment="Center">
-                            <TextBlock x:Name="CompactTitle" FontSize="12.5" FontWeight="SemiBold"
+                        <StackPanel Grid.Column="1" Margin="12,0,10,0" VerticalAlignment="Center">
+                            <TextBlock x:Name="CompactTitle" FontSize="14" FontWeight="SemiBold"
                                        TextTrimming="CharacterEllipsis" />
-                            <TextBlock x:Name="CompactSubtitle" FontSize="10"
+                            <TextBlock x:Name="CompactSubtitle" FontSize="11"
                                        Foreground="{StaticResource TextSecondaryBrush}"
                                        TextTrimming="CharacterEllipsis" Margin="0,1,0,0" />
                         </StackPanel>
@@ -155,15 +156,15 @@
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,6,0"
                                         ToolTip="{Binding Buds.DetailText}"
                                         Visibility="{Binding Buds.HasBattery, Converter={StaticResource BoolToVis}}">
-                                <TextBlock Text="&#xE7F6;" FontFamily="{StaticResource IconFont}" FontSize="10"
+                                <TextBlock Text="&#xE7F6;" FontFamily="{StaticResource IconFont}" FontSize="11"
                                            Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding Buds.CompactText}" FontSize="9.5"
+                                <TextBlock Text="{Binding Buds.CompactText}" FontSize="10.5"
                                            Foreground="{StaticResource TextSecondaryBrush}"
                                            VerticalAlignment="Center" Margin="3,0,0,0" />
                             </StackPanel>
-                            <ctrl:RingProgress x:Name="CompactRing" Width="30" Height="30" Thickness="3"
+                            <ctrl:RingProgress x:Name="CompactRing" Width="34" Height="34" Thickness="3.5"
                                                Foreground="{StaticResource AccentBrush}" Visibility="Collapsed" />
-                            <Grid x:Name="CompactEqualizer" Width="18" Height="18" Margin="6,0,4,0"
+                            <Grid x:Name="CompactEqualizer" Width="20" Height="20" Margin="7,0,5,0"
                                   Visibility="Collapsed" VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
                                             VerticalAlignment="Center">
@@ -210,17 +211,17 @@
                                 </Grid.Triggers>
                             </Grid>
                             <Button x:Name="CompactPlayButton" Style="{StaticResource IconButton}"
-                                    Width="30" Height="30" FontSize="16" Visibility="Collapsed"
+                                    Width="34" Height="34" FontSize="18" Visibility="Collapsed"
                                     Click="CompactPlay_Click" />
                         </StackPanel>
                     </Grid>
 
                     <ProgressBar x:Name="CompactBar" Grid.Row="1" Style="{StaticResource HudProgress}"
-                                 Height="2" Margin="18,0,18,5" Maximum="100" Visibility="Collapsed" />
+                                 Height="2.5" Margin="20,0,20,6" Maximum="100" Visibility="Collapsed" />
 
                     <!-- Transparent drag surface over the thin progress bar. -->
-                    <Border x:Name="CompactSeekHit" Grid.RowSpan="2" Height="14" VerticalAlignment="Bottom"
-                            Margin="18,0,18,0" Background="Transparent" Cursor="Hand" Visibility="Collapsed"
+                    <Border x:Name="CompactSeekHit" Grid.RowSpan="2" Height="16" VerticalAlignment="Bottom"
+                            Margin="20,0,20,0" Background="Transparent" Cursor="Hand" Visibility="Collapsed"
                             PreviewMouseLeftButtonDown="CompactSeek_Down"
                             PreviewMouseMove="CompactSeek_Move"
                             PreviewMouseLeftButtonUp="CompactSeek_Up"
@@ -228,37 +229,37 @@
                 </Grid>
 
                 <!-- ── Edge sliver ───────────────────────────────────────── -->
-                <Grid x:Name="SliverFace" Width="120" Height="4" HorizontalAlignment="Center"
+                <Grid x:Name="SliverFace" Width="140" Height="5" HorizontalAlignment="Center"
                       VerticalAlignment="Top" Visibility="Collapsed" Opacity="0" IsHitTestVisible="False">
-                    <Border Width="44" Height="2" CornerRadius="1" Background="{StaticResource AccentGradientBrush}"
+                    <Border Width="52" Height="2.5" CornerRadius="1.25" Background="{StaticResource AccentGradientBrush}"
                             Opacity="0.8" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Grid>
 
                 <!-- ── Drop zone ─────────────────────────────────────────── -->
-                <Grid x:Name="DropFace" Width="420" Height="120" HorizontalAlignment="Center"
+                <Grid x:Name="DropFace" Width="460" Height="132" HorizontalAlignment="Center"
                       VerticalAlignment="Top" Visibility="Collapsed" Opacity="0" IsHitTestVisible="False">
                     <Rectangle Margin="10" Stroke="#666C8CFF" StrokeThickness="1.4" StrokeDashArray="4 4"
                                RadiusX="22" RadiusY="22" />
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock Text="&#xE8B7;" FontFamily="{StaticResource IconFont}" FontSize="26"
+                        <TextBlock Text="&#xE8B7;" FontFamily="{StaticResource IconFont}" FontSize="28"
                                    Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center" />
-                        <TextBlock Text="松手，放到文件架上" FontSize="12.5" FontWeight="SemiBold"
+                        <TextBlock Text="松手，放到文件架上" FontSize="13.5" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" Margin="0,8,0,0" />
-                        <TextBlock Text="支持任意文件与文件夹" FontSize="9.5"
+                        <TextBlock Text="支持任意文件与文件夹" FontSize="10"
                                    Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center"
                                    Margin="0,2,0,0" />
                     </StackPanel>
                 </Grid>
 
                 <!-- ── Expanded panel ────────────────────────────────────── -->
-                <Grid x:Name="ExpandedFace" Width="600" Height="520" HorizontalAlignment="Center"
+                <Grid x:Name="ExpandedFace" Width="640" Height="560" HorizontalAlignment="Center"
                       VerticalAlignment="Top" Visibility="Collapsed" Opacity="0" IsHitTestVisible="False">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="54" />
+                        <RowDefinition Height="58" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Grid Margin="20,0,14,0">
+                    <Grid Margin="22,0,16,0">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Border Width="7" Height="7" CornerRadius="4" Background="{StaticResource AccentBrush}"
                                     Margin="0,0,8,0" />
@@ -287,9 +288,9 @@
                         </StackPanel>
                     </Grid>
 
-                    <Grid Grid.Row="1" Margin="14,0,14,14">
+                    <Grid Grid.Row="1" Margin="16,0,16,16">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="122" />
+                            <ColumnDefinition Width="126" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
