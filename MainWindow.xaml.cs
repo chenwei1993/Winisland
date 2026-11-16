@@ -1019,13 +1019,25 @@ public partial class MainWindow : Window
 
         var dpi = VisualTreeHelper.GetDpi(this);
         var centerX = rect.Left + (rect.Right - rect.Left) / 2;
-        var halfWidth = (int)Math.Round((CompactWidth / 2 + 12) * dpi.DpiScaleX);
-        var detectionBottom = rect.Top + (int)Math.Round((CompactHeight + 16) * dpi.DpiScaleY);
+
+        // Use the real visible footprint. While hidden, use the footprint of the
+        // face that would be revealed; otherwise a window under the compact
+        // island but not under the idle pill would keep it in a hide/show loop.
+        var compact = _surface == Surface.Sliver
+            ? IsCompactContentExpected()
+            : _surface == Surface.Compact;
+
+        var contentWidth = _surface == Surface.Sliver
+            ? compact ? CompactWidth : IdleWidth
+            : IslandBorder.Width > 1 ? IslandBorder.Width : IdleWidth;
+        var contentHeight = _surface == Surface.Sliver
+            ? compact ? CompactHeight : IdleHeight
+            : IslandBorder.Height > 1 ? IslandBorder.Height : IdleHeight;
+
+        var halfWidth = (int)Math.Round((contentWidth / 2 + 6) * dpi.DpiScaleX);
+        var detectionBottom = rect.Top + (int)Math.Round((contentHeight + 2) * dpi.DpiScaleY);
         var middleY = rect.Top + (detectionBottom - rect.Top) / 2;
 
-        // Use a fixed footprint instead of the current sliver size. Otherwise a
-        // window under the full island stops covering the tiny sliver, making
-        // the island expand and hide forever.
         var detection = new Native.RECT
         {
             Left = centerX - halfWidth,
@@ -1127,6 +1139,27 @@ public partial class MainWindow : Window
         return point.X >= rect.Left - horizontal && point.X <= rect.Right + horizontal &&
                point.Y >= rect.Top - 2 * dpi.DpiScaleY &&
                point.Y <= rect.Bottom + vertical;
+    }
+
+    private bool IsCompactContentExpected()
+    {
+        if (_transient is not null)
+        {
+            if (DateTime.Now < _transientUntil)
+            {
+                return true;
+            }
+
+            _transient = null;
+        }
+
+        if (_s.Timers.CountdownActive)
+        {
+            return true;
+        }
+
+        var media = _s.Media.Current;
+        return media.HasSession && (media.IsPlaying || DateTime.Now < _mediaHoldUntil);
     }
 
     private LiveActivity? ResolveActivity()
