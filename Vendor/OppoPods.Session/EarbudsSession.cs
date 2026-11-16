@@ -119,6 +119,14 @@ public sealed class EarbudsSession : INotifyPropertyChanged, IDisposable
             _generation++;
             _connectionState = ConnectionState.Connecting;
             _deviceName = deviceName;
+
+            // Some firmware does not return a product id; the advertised model
+            // name is still enough to resolve EQ / spatial capabilities.
+            if (_modelRegistry.CapabilitiesForName(deviceName) is { } byName)
+            {
+                Capabilities = byName;
+            }
+
             _sessionCts = new CancellationTokenSource();
             timeoutCts = _timeoutCts = new CancellationTokenSource();
         }

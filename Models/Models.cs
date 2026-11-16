@@ -2,6 +2,7 @@ using System.Globalization;
 using System.IO;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using WinIsland.Infrastructure;
 
 namespace WinIsland.Models;
 
@@ -58,6 +59,20 @@ public sealed class ClipboardItem
         ClipboardKind.Image => "点击复制图片",
         _ => Text
     };
+}
+
+public sealed class BudsEqualizerOption : ObservableObject
+{
+    public required int Id { get; init; }
+    public required string Name { get; init; }
+
+    private bool _isSelected;
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => Set(ref _isSelected, value);
+    }
 }
 
 public sealed class AudioOutputDevice

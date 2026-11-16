@@ -1,7 +1,9 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Threading;
 using OppoPods.Core;
 using OppoPods.Session;
+using WinIsland.Models;
 
 namespace WinIsland.Services;
 
@@ -162,10 +164,36 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
     public bool CanNoiseAdaptive => CanNoiseControl &&
         _model.Session.Capabilities.IndexByNoiseMode.ContainsKey(NoiseControlMode.Adaptive);
 
+    public ObservableCollection<BudsEqualizerOption> EqualizerOptions { get; } = new();
+
+    public bool HasEqualizer => IsConnected && EqualizerOptions.Count > 0;
+
     public bool CanGameMode => IsConnected && _model.Session.Capabilities.HasGameMode;
     public bool CanWearDetection => IsConnected && _model.Session.Capabilities.HasWearDetection;
     public bool CanDualDevice => IsConnected && _model.Session.Capabilities.HasDualDevice;
-    public bool CanSpatialSound => IsConnected && _model.Session.Capabilities.HasSpatialSound;
+    public bool CanSpatialSound => IsConnected &&
+        _model.Session.Capabilities.HasSpatialSound &&
+        !_model.Session.Capabilities.HasSpatialAudioModes;
+
+    public bool CanSpatialAudioModes => IsConnected && _model.Session.Capabilities.HasSpatialAudioModes;
+
+    public bool SpatialSound
+    {
+        get => _model.Session.SpatialSound;
+        set
+        {
+            if (IsConnected && _model.Session.SpatialSound != value)
+            {
+                _model.Session.SetSpatialSound(value);
+                QueueRefresh();
+            }
+        }
+    }
+
+    public SpatialAudioMode SpatialAudioMode => _model.Session.SpatialAudio;
+    public bool IsSpatialAudioOff => SpatialAudioMode == SpatialAudioMode.Off;
+    public bool IsSpatialAudioFixed => SpatialAudioMode == SpatialAudioMode.Fixed;
+    public bool IsSpatialAudioHeadTracking => SpatialAudioMode == SpatialAudioMode.HeadTracking;
 
     public bool GameMode
     {
@@ -206,19 +234,6 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
         }
     }
 
-    public bool SpatialSound
-    {
-        get => _model.Session.SpatialSound;
-        set
-        {
-            if (IsConnected && _model.Session.SpatialSound != value)
-            {
-                _model.Session.SetSpatialSound(value);
-                QueueRefresh();
-            }
-        }
-    }
-
     public void SetNoiseControl(NoiseControlMode mode)
     {
         if (!IsConnected)
@@ -227,6 +242,28 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
         }
 
         _model.Session.SetNoiseControl(mode);
+        QueueRefresh();
+    }
+
+    public void SetEqualizer(int presetId)
+    {
+        if (!IsConnected)
+        {
+            return;
+        }
+
+        _model.Session.SetEQ(presetId);
+        QueueRefresh();
+    }
+
+    public void SetSpatialAudio(SpatialAudioMode mode)
+    {
+        if (!IsConnected)
+        {
+            return;
+        }
+
+        _model.Session.SetSpatialAudio(mode);
         QueueRefresh();
     }
 
@@ -381,8 +418,49 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
             return;
         }
 
+        RefreshEqualizerOptions();
         CheckLowBattery();
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
+    }
+
+    private void RefreshEqualizerOptions()
+    {
+        var presets = IsConnected
+            ? _model.Session.EqualizerPresets
+            : Array.Empty<EqualizerPreset>();
+
+        var same = EqualizerOptions.Count == presets.Count;
+        if (same)
+        {
+            for (var i = 0; i < presets.Count; i++)
+            {
+                if (EqualizerOptions[i].Id != presets[i].Id ||
+                    !string.Equals(EqualizerOptions[i].Name, presets[i].Name, StringComparison.Ordinal))
+                {
+                    same = false;
+                    break;
+                }
+            }
+        }
+
+        if (!same)
+        {
+            EqualizerOptions.Clear();
+            foreach (var preset in presets)
+            {
+                EqualizerOptions.Add(new BudsEqualizerOption
+                {
+                    Id = preset.Id,
+                    Name = preset.Name
+                });
+            }
+        }
+
+        var selected = _model.Session.SelectedEQ;
+        foreach (var option in EqualizerOptions)
+        {
+            option.IsSelected = option.Id == selected;
+        }
     }
 
     private void CheckLowBattery()

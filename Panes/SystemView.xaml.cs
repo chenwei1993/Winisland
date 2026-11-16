@@ -108,6 +108,23 @@ public partial class SystemView : UserControl
         App.Services.Buds.SetNoiseControl(mode);
     }
 
+    private void BudsEq_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: int presetId })
+        {
+            App.Services.Buds.SetEqualizer(presetId);
+        }
+    }
+
+    private void BudsSpatial_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: string tag } &&
+            Enum.TryParse<SpatialAudioMode>(tag, out var mode))
+        {
+            App.Services.Buds.SetSpatialAudio(mode);
+        }
+    }
+
     private static bool IsUserEditing(Slider slider)
     {
         return slider.IsKeyboardFocusWithin || slider.IsMouseCaptureWithin || slider.IsStylusCaptureWithin;

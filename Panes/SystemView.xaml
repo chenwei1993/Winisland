@@ -302,6 +302,51 @@
                                      Click="BudsNoise_Click" />
                     </WrapPanel>
 
+                    <StackPanel Margin="0,8,0,0"
+                                Visibility="{Binding Buds.HasEqualizer, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="音效 EQ" Style="{StaticResource Caption}" Margin="2,0,0,3" />
+                        <ItemsControl ItemsSource="{Binding Buds.EqualizerOptions}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <RadioButton Style="{StaticResource SegmentButton}" Content="{Binding Name}"
+                                                 GroupName="BudsEq" Margin="0,2,4,0"
+                                                 IsChecked="{Binding IsSelected, Mode=OneWay}"
+                                                 Tag="{Binding Id}" Click="BudsEq_Click" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="2,4,14,0"
+                                Visibility="{Binding Buds.CanSpatialSound, Converter={StaticResource BoolToVis}}">
+                        <CheckBox Content="空间音效" FontSize="10.5"
+                                  Foreground="{StaticResource TextSecondaryBrush}"
+                                  IsChecked="{Binding Buds.SpatialSound, Mode=TwoWay}" />
+                        <TextBlock Text="增强电影和音乐的空间感" Style="{StaticResource Caption}"
+                                   VerticalAlignment="Center" Margin="8,0,0,0" />
+                    </StackPanel>
+
+                    <WrapPanel Margin="0,4,0,0"
+                               Visibility="{Binding Buds.CanSpatialAudioModes, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="空间音频" Style="{StaticResource Caption}"
+                                   VerticalAlignment="Center" Margin="2,4,7,0" />
+                        <RadioButton Style="{StaticResource SegmentButton}" Content="关闭" GroupName="BudsSpatial"
+                                     Tag="Off" IsChecked="{Binding Buds.IsSpatialAudioOff, Mode=OneWay}"
+                                     Click="BudsSpatial_Click" />
+                        <RadioButton Style="{StaticResource SegmentButton}" Content="固定" GroupName="BudsSpatial"
+                                     Tag="Fixed" IsChecked="{Binding Buds.IsSpatialAudioFixed, Mode=OneWay}"
+                                     Click="BudsSpatial_Click" />
+                        <RadioButton Style="{StaticResource SegmentButton}" Content="头部跟踪" GroupName="BudsSpatial"
+                                     Tag="HeadTracking"
+                                     IsChecked="{Binding Buds.IsSpatialAudioHeadTracking, Mode=OneWay}"
+                                     Click="BudsSpatial_Click" />
+                    </WrapPanel>
+
                     <WrapPanel Margin="0,4,0,0">
                         <StackPanel Orientation="Horizontal" Margin="2,4,14,0"
                                     ToolTip="开启后降低耳机蓝牙音频延迟，适合游戏；可能影响连接稳定性和续航"

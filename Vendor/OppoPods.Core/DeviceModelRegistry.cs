@@ -85,6 +85,14 @@ public sealed class DeviceModelRegistry
 
     public int ModelCount => _modelsByID.Count;
 
+    public DeviceCapabilities? CapabilitiesForName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return null;
+        var model = _modelsByID.Values.FirstOrDefault(m =>
+            string.Equals(m.Name?.Trim(), name.Trim(), StringComparison.OrdinalIgnoreCase));
+        return model?.Id is { Length: > 0 } id ? CapabilitiesFor(id) : null;
+    }
+
     public DeviceCapabilities? CapabilitiesFor(string productID)
     {
         var id = productID.ToUpperInvariant();
