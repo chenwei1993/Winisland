@@ -11,12 +11,18 @@ namespace WinIsland.Services;
 
 public sealed class ClipboardWatcher : IDisposable
 {
+    private readonly object _workerGate = new();
+    private readonly ManualResetEventSlim _workerReady = new(false);
+
     private IntPtr _hwnd;
     private bool _listening;
     private bool _enabled = true;
     private bool _retryScheduled;
+    private bool _disposed;
     private DateTime _suppressUntil = DateTime.MinValue;
     private string? _lastText;
+    private Thread? _workerThread;
+    private Dispatcher? _workerDispatcher;
 
     public ObservableCollection<ClipboardItem> Items { get; } = new();
 
@@ -39,32 +45,80 @@ public sealed class ClipboardWatcher : IDisposable
 
     public void OnClipboardUpdate()
     {
-        if (!_enabled)
+        if (!_enabled || !EnsureWorker())
         {
             return;
         }
 
-        var dispatcher = System.Windows.Application.Current?.Dispatcher;
-        if (dispatcher is null)
+        _workerDispatcher!.BeginInvoke(new Action(Read), DispatcherPriority.Background);
+    }
+
+    private bool EnsureWorker()
+    {
+        if (_disposed)
         {
-            return;
+            return false;
         }
 
-        dispatcher.BeginInvoke(new Action(Read), DispatcherPriority.Background);
+        if (_workerDispatcher is not null)
+        {
+            return true;
+        }
+
+        lock (_workerGate)
+        {
+            if (_workerDispatcher is not null)
+            {
+                return true;
+            }
+
+            _workerReady.Reset();
+            _workerThread = new Thread(() =>
+            {
+                try
+                {
+                    _workerDispatcher = Dispatcher.CurrentDispatcher;
+                    _workerReady.Set();
+                    Dispatcher.Run();
+                }
+                catch
+                {
+                    _workerReady.Set();
+                }
+            })
+            {
+                IsBackground = true,
+                Name = "WinIsland.Clipboard"
+            };
+            _workerThread.SetApartmentState(ApartmentState.STA);
+            _workerThread.Start();
+
+            return _workerReady.Wait(TimeSpan.FromSeconds(2)) && _workerDispatcher is not null;
+        }
     }
 
     private void Read()
     {
-        if (!_enabled || DateTime.Now < _suppressUntil)
+        if (_disposed || !_enabled || DateTime.Now < _suppressUntil)
         {
             return;
         }
 
         try
         {
-            if (Clipboard.ContainsText(TextDataFormat.UnicodeText))
+            // Read one snapshot of the clipboard. Calling ContainsText /
+            // ContainsFileDropList / ContainsImage separately opens the Windows
+            // clipboard multiple times and can block the UI while the source app
+            // still owns it.
+            var data = Clipboard.GetDataObject();
+            if (data is null)
             {
-                var text = Clipboard.GetText(TextDataFormat.UnicodeText);
+                return;
+            }
+
+            if (data.GetDataPresent(DataFormats.UnicodeText))
+            {
+                var text = data.GetData(DataFormats.UnicodeText) as string;
                 if (string.IsNullOrWhiteSpace(text))
                 {
                     return;
@@ -90,10 +144,10 @@ public sealed class ClipboardWatcher : IDisposable
                 return;
             }
 
-            if (Clipboard.ContainsFileDropList())
+            if (data.GetDataPresent(DataFormats.FileDrop))
             {
-                var list = Clipboard.GetFileDropList();
-                var files = list.Cast<string>()
+                var list = data.GetData(DataFormats.FileDrop) as string[];
+                var files = (list ?? Array.Empty<string>())
                     .Where(path => File.Exists(path) || Directory.Exists(path))
                     .ToArray();
                 if (files.Length == 0)
@@ -110,9 +164,9 @@ public sealed class ClipboardWatcher : IDisposable
                 return;
             }
 
-            if (Clipboard.ContainsImage())
+            if (data.GetDataPresent(DataFormats.Bitmap))
             {
-                var image = Clipboard.GetImage();
+                var image = data.GetData(DataFormats.Bitmap) as BitmapSource ?? Clipboard.GetImage();
                 if (image is null)
                 {
                     return;
@@ -163,13 +217,23 @@ public sealed class ClipboardWatcher : IDisposable
 
     private void ScheduleRetry()
     {
-        if (_retryScheduled)
+        if (_retryScheduled || !EnsureWorker())
         {
             return;
         }
 
+        var dispatcher = _workerDispatcher!;
+        if (!dispatcher.CheckAccess())
+        {
+            dispatcher.BeginInvoke(new Action(ScheduleRetry), DispatcherPriority.Background);
+            return;
+        }
+
         _retryScheduled = true;
-        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
+        var timer = new DispatcherTimer(DispatcherPriority.Background, dispatcher)
+        {
+            Interval = TimeSpan.FromMilliseconds(200)
+        };
         timer.Tick += (_, _) =>
         {
             timer.Stop();
@@ -181,6 +245,18 @@ public sealed class ClipboardWatcher : IDisposable
 
     private void Add(ClipboardItem item)
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        var appDispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (appDispatcher is not null && !appDispatcher.CheckAccess())
+        {
+            appDispatcher.BeginInvoke(new Action(() => Add(item)), DispatcherPriority.Background);
+            return;
+        }
+
         if (item.Kind == ClipboardKind.Text)
         {
             var duplicate = Items.FirstOrDefault(i => i.Kind == ClipboardKind.Text && i.Text == item.Text);
@@ -210,9 +286,24 @@ public sealed class ClipboardWatcher : IDisposable
 
     public void Copy(ClipboardItem item)
     {
+        _suppressUntil = DateTime.Now.AddMilliseconds(600);
+        if (!EnsureWorker())
+        {
+            return;
+        }
+
+        _workerDispatcher!.BeginInvoke(new Action(() => CopyCore(item)), DispatcherPriority.Background);
+    }
+
+    private void CopyCore(ClipboardItem item)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
         try
         {
-            _suppressUntil = DateTime.Now.AddMilliseconds(600);
             switch (item.Kind)
             {
                 case ClipboardKind.Image when item.ImageBytes is { Length: > 0 }:
@@ -297,10 +388,28 @@ public sealed class ClipboardWatcher : IDisposable
 
     public void Dispose()
     {
+        _disposed = true;
+
         if (_listening && _hwnd != IntPtr.Zero)
         {
             Native.RemoveClipboardFormatListener(_hwnd);
             _listening = false;
         }
+
+        var dispatcher = _workerDispatcher;
+        if (dispatcher is not null)
+        {
+            try
+            {
+                dispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
+            }
+            catch
+            {
+                // Ignore shutdown races.
+            }
+        }
+
+        _workerThread?.Join(500);
+        _workerReady.Dispose();
     }
 }
