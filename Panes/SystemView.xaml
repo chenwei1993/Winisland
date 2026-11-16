@@ -243,10 +243,43 @@
                                        TextWrapping="Wrap" MaxWidth="300" HorizontalAlignment="Left"
                                        Margin="0,2,0,0" />
                         </StackPanel>
-                        <Button Content="重新连接" Style="{StaticResource GhostButton}"
-                                HorizontalAlignment="Right" VerticalAlignment="Center"
-                                Click="BudsReconnect_Click" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button Content="切换设备" Style="{StaticResource GhostButton}" Margin="0,0,6,0"
+                                    Visibility="{Binding Buds.HasMultipleDevices, Converter={StaticResource BoolToVis}}"
+                                    Click="BudsDeviceButton_Click" />
+                            <Button Content="重新连接" Style="{StaticResource GhostButton}"
+                                    Click="BudsReconnect_Click" />
+                        </StackPanel>
                     </Grid>
+
+                    <Border x:Name="BudsDeviceMenu" Visibility="Collapsed" Background="#0FFFFFFF"
+                            BorderBrush="#14FFFFFF" BorderThickness="1" CornerRadius="10" Padding="5" Margin="0,7,0,0">
+                        <ItemsControl ItemsSource="{Binding Buds.Devices}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Style="{StaticResource DeviceButton}" Padding="9,7"
+                                            Click="BudsDevice_Click">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Name}" FontSize="10.5"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding StateText}" Style="{StaticResource Caption}"
+                                                       VerticalAlignment="Center" Margin="8,0,8,0" />
+                                            <TextBlock Grid.Column="2" Text="{Binding CheckGlyph}"
+                                                       FontFamily="{StaticResource IconFont}" FontSize="11"
+                                                       Foreground="{StaticResource AccentBrush}"
+                                                       VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Border>
 
                     <Grid Margin="0,9,0,0"
                           Visibility="{Binding Buds.IsConnected, Converter={StaticResource BoolToVis}}">

@@ -97,6 +97,24 @@ public partial class SystemView : UserControl
         await App.Services.Buds.ReconnectAsync();
     }
 
+    private void BudsDeviceButton_Click(object sender, RoutedEventArgs e)
+    {
+        BudsDeviceMenu.Visibility = BudsDeviceMenu.Visibility == Visibility.Visible
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+    }
+
+    private async void BudsDevice_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: BudsDeviceOption device })
+        {
+            return;
+        }
+
+        BudsDeviceMenu.Visibility = Visibility.Collapsed;
+        await App.Services.Buds.SelectDeviceAsync(device);
+    }
+
     private void BudsNoise_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: string tag } ||

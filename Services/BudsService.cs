@@ -190,6 +190,10 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
 
     public ObservableCollection<BudsEqualizerOption> EqualizerOptions { get; } = new();
 
+    public ObservableCollection<BudsDeviceOption> Devices { get; } = new();
+
+    public bool HasMultipleDevices => Devices.Count > 1;
+
     public bool HasEqualizer => IsConnected && EqualizerOptions.Count > 0;
 
     public bool CanGameMode => HasCapability(DeviceCapability.GamingMode);
@@ -284,6 +288,24 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
         QueueRefresh();
     }
 
+    public async Task SelectDeviceAsync(BudsDeviceOption option)
+    {
+        try
+        {
+            await _manager.SelectDeviceAsync(option.Id);
+            if (!option.IsConnected)
+            {
+                await _manager.ConnectDeviceAsync(option.Id);
+            }
+        }
+        catch
+        {
+            // The state store exposes the failure.
+        }
+
+        QueueRefresh();
+    }
+
     public void Refresh()
     {
         if (IsConnected)
@@ -342,10 +364,46 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
             return;
         }
 
+        RefreshDevices();
         RefreshEqualizerOptions();
         CheckLowBattery();
         UpdateConnectionNotification();
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(string.Empty));
+    }
+
+    private void RefreshDevices()
+    {
+        var known = _manager.KnownDevices;
+        var same = Devices.Count == known.Count;
+        if (same)
+        {
+            for (var i = 0; i < known.Count; i++)
+            {
+                if (!string.Equals(Devices[i].Id, known[i].Identity.DeviceId, StringComparison.Ordinal) ||
+                    !string.Equals(Devices[i].Name, known[i].Identity.Name, StringComparison.Ordinal) ||
+                    Devices[i].IsConnected != known[i].IsConnected ||
+                    Devices[i].IsActive != known[i].IsActive)
+                {
+                    same = false;
+                    break;
+                }
+            }
+        }
+
+        if (!same)
+        {
+            Devices.Clear();
+            foreach (var device in known)
+            {
+                Devices.Add(new BudsDeviceOption
+                {
+                    Id = device.Identity.DeviceId,
+                    Name = device.Identity.Name,
+                    IsConnected = device.IsConnected,
+                    IsActive = device.IsActive
+                });
+            }
+        }
     }
 
     private void RefreshEqualizerOptions()

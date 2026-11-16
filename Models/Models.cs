@@ -75,6 +75,16 @@ public sealed class BudsEqualizerOption : ObservableObject
     }
 }
 
+public sealed class BudsDeviceOption
+{
+    public required string Id { get; init; }
+    public required string Name { get; init; }
+    public bool IsConnected { get; init; }
+    public bool IsActive { get; init; }
+    public string CheckGlyph => IsActive ? "\uE73E" : string.Empty;
+    public string StateText => IsActive ? "当前" : IsConnected ? "已连接" : "未连接";
+}
+
 public sealed class AudioOutputDevice
 {
     public required string Id { get; init; }
