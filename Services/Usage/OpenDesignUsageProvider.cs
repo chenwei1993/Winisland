@@ -33,7 +33,7 @@ public sealed class OpenDesignUsageProvider : IUsageProvider
     public string? ExtraSettingLabel => "工作区 ID";
 
     public string? ExtraSettingHint =>
-        "支持 Control Key（vela_ctrl_…）或浏览器 Cookie（含 session_token）；推理 Key（sk-amr_）不能查询额度。工作区 ID 可留空自动读取。";
+        "支持 Control Key（vela_ctrl_…）或浏览器 Cookie：可粘贴完整 Cookie 头，也可只粘贴 session_token 的值；推理 Key（sk-amr_）不能查询额度。工作区 ID 可留空自动读取。";
 
     public string KeyPlaceholder => "粘贴 Control Key 或 Cookie";
 
@@ -48,16 +48,60 @@ public sealed class OpenDesignUsageProvider : IUsageProvider
         AppSettings settings,
         CancellationToken cancellationToken)
     {
-        var credential = apiKey.Trim();
+        var credential = apiKey.Trim().Trim('"');
         var workspaceId = extra?.Trim() ?? string.Empty;
 
-        // Control keys never contain '=', cookie headers always do.
-        var cookieMode = credential.Contains('=') &&
-                         !credential.StartsWith("vela_ctrl", StringComparison.OrdinalIgnoreCase);
+        if (credential.StartsWith("vela_ctrl", StringComparison.OrdinalIgnoreCase))
+        {
+            return await FetchWithControlKeyAsync(credential, workspaceId, cancellationToken).ConfigureAwait(false);
+        }
 
-        return cookieMode
-            ? await FetchWithCookieAsync(credential, workspaceId, cancellationToken).ConfigureAwait(false)
-            : await FetchWithControlKeyAsync(credential, workspaceId, cancellationToken).ConfigureAwait(false);
+        if (credential.StartsWith("sk-", StringComparison.OrdinalIgnoreCase))
+        {
+            return new UsageFetchResult(UsageStatus.Unauthorized,
+                "推理 API Key 不能查询 OpenDesign 额度，请使用 Control Key 或浏览器 Cookie",
+                Array.Empty<UsageMetricData>(), null);
+        }
+
+        var cookie = BuildCookieHeader(credential);
+        return cookie.Length == 0
+            ? new UsageFetchResult(UsageStatus.NeedsKey, null, Array.Empty<UsageMetricData>(), null)
+            : await FetchWithCookieAsync(cookie, workspaceId, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Accepts a full Cookie header, a header with the "Cookie:" prefix, or just
+    /// the bare session token value copied from DevTools.
+    /// </summary>
+    private static string BuildCookieHeader(string credential)
+    {
+        var value = credential.Trim();
+        if (value.StartsWith("Cookie:", StringComparison.OrdinalIgnoreCase))
+        {
+            value = value[7..].Trim();
+        }
+
+        value = value.Replace("\r", " ").Replace("\n", " ");
+
+        if (value.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        if (value.Contains("session_token", StringComparison.OrdinalIgnoreCase))
+        {
+            return value;
+        }
+
+        var equals = value.IndexOf('=');
+        if (equals > 0 && value[..equals].IndexOfAny([' ', ';', '\t']) < 0)
+        {
+            return value;
+        }
+
+        // Bare token value: send it under both the secure and plain better-auth
+        // cookie names, since the site uses the prefixed one on HTTPS.
+        return $"__Secure-better-auth.session_token={value}; better-auth.session_token={value}";
     }
 
     private async Task<UsageFetchResult> FetchWithControlKeyAsync(
@@ -158,7 +202,7 @@ public sealed class OpenDesignUsageProvider : IUsageProvider
 
             if (workspaceStatus is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
             {
-                return Unauthorized("Cookie 已过期或没有工作区权限");
+                return Unauthorized("Cookie 已过期或缺少权限，请重新复制");
             }
 
             if (workspaceStatus != HttpStatusCode.OK)
@@ -180,7 +224,7 @@ public sealed class OpenDesignUsageProvider : IUsageProvider
 
         if (status is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
         {
-            return Unauthorized("Cookie 已过期或没有该工作区权限");
+            return Unauthorized("Cookie 已过期或缺少该工作区权限，请重新复制");
         }
 
         if (status == HttpStatusCode.NotFound)

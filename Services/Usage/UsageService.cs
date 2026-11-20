@@ -381,7 +381,9 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
                 card.StatusLevel = 1;
                 break;
             case UsageStatus.Unauthorized:
-                card.StatusText = "API Key 无效";
+                card.StatusText = string.Equals(provider.Id, "opendesign", StringComparison.Ordinal)
+                    ? "凭据无效"
+                    : "API Key 无效";
                 card.StatusLevel = 2;
                 break;
             case UsageStatus.RateLimited:
