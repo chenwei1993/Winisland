@@ -28,8 +28,8 @@ public partial class UsageSettingsWindow : Window
 
         // Keep the window inside the work area at high DPI / small screens.
         var workArea = SystemParameters.WorkArea;
-        Width = Math.Min(580, workArea.Width - 40);
-        Height = Math.Min(660, workArea.Height - 40);
+        Width = Math.Min(620, workArea.Width - 40);
+        Height = Math.Min(700, workArea.Height - 40);
 
         BuildRows();
     }
