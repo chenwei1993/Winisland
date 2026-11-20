@@ -1,11 +1,271 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WinIsland · 为 Windows 打造的灵动岛</title>
+    <meta name="description" content="WinIsland 把灵动岛带到 Windows：媒体控制、多品牌耳机、AI 用量、系统监控、剪贴板与通知，一个顶部小岛全部搞定。免安装单文件，开源免费。">
+    <meta name="theme-color" content="#0a0a0d">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="WinIsland · 为 Windows 打造的灵动岛">
+    <meta property="og:description" content="媒体、耳机、AI 用量、系统状态与通知，全都收进屏幕顶部的一个小岛。">
+    <meta property="og:image" content="assets/shot-usage.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="assets/favicon.ico">
+    <link rel="apple-touch-icon" href="assets/icon.png">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>hello world</h1>
+<div class="backdrop" aria-hidden="true">
+    <div class="glow glow-a"></div>
+    <div class="glow glow-b"></div>
+    <div class="grid-lines"></div>
+</div>
+
+<header class="nav" id="top">
+    <div class="nav-inner">
+        <a class="brand" href="#top" aria-label="WinIsland 首页">
+            <span class="logo-mark" aria-hidden="true"><i></i></span>
+            <span>WinIsland</span>
+        </a>
+        <nav class="nav-links" aria-label="主导航">
+            <a href="#features">功能</a>
+            <a href="#screens">截图</a>
+            <a href="#download">下载</a>
+            <a href="#faq">常见问题</a>
+        </nav>
+        <div class="nav-actions">
+            <a class="ghost small" href="https://github.com/chenwei1993/Winisland" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.23c0 4.51 2.87 8.33 6.84 9.68.5.1.68-.22.68-.49v-1.7c-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.57 2.34 1.12 2.91.85.09-.66.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05A9.3 9.3 0 0 1 12 6.97c.85 0 1.71.12 2.51.35 1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.8-4.57 5.06.36.32.68.94.68 1.9v2.8c0 .27.18.6.69.49A10.25 10.25 0 0 0 22 12.23C22 6.58 17.52 2 12 2Z"/></svg>
+                GitHub
+            </a>
+            <button class="menu-button" aria-label="打开菜单" aria-expanded="false">
+                <span></span><span></span>
+            </button>
+        </div>
+    </div>
+</header>
+
+<main>
+    <section class="hero">
+        <div class="hero-copy">
+            <span class="eyebrow"><i></i>Windows 10 / 11 · 免安装单文件</span>
+            <h1>把灵动岛<br><span class="gradient">带到 Windows</span></h1>
+            <p class="lead">
+                媒体、耳机、AI 用量、系统状态、剪贴板与通知，全部收进屏幕顶部的一个小岛。
+                不挡视线，不占桌面，需要的时候一眼就能看到。
+            </p>
+            <div class="cta-row">
+                <a class="button primary" id="download-hero" href="https://github.com/chenwei1993/Winisland/releases/latest">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg>
+                    下载 WinIsland <span class="version" id="version-hero">1.2.1</span>
+                </a>
+                <a class="button ghost" href="https://github.com/chenwei1993/Winisland" target="_blank" rel="noopener">
+                    查看源码
+                </a>
+            </div>
+            <ul class="meta-row">
+                <li>无需安装 .NET</li>
+                <li>GPL-3.0 开源</li>
+                <li>本地运行，无遥测</li>
+            </ul>
+        </div>
+
+        <div class="hero-visual">
+            <div class="hero-glow" aria-hidden="true"></div>
+            <img class="idle-pill" src="assets/shot-idle.png" alt="WinIsland 空闲状态，显示时间、日期、耳机电量和 AI 用量" width="492" height="52">
+            <div class="shot-frame hero-frame">
+                <img class="shot" src="assets/shot-usage.png" alt="WinIsland 的 AI 用量面板" width="680" height="590">
+            </div>
+            <div class="float-pill pill-a">
+                <span class="dot green"></span> 耳机已连接
+            </div>
+            <div class="float-pill pill-b">
+                <span class="spark">✦</span> 3 个 AI 平台
+            </div>
+        </div>
+    </section>
+
+    <section class="stats" aria-label="概览">
+        <div><strong>9</strong><span>个功能面板</span></div>
+        <div><strong>12+</strong><span>耳机品牌</span></div>
+        <div><strong>3</strong><span>AI 用量平台</span></div>
+        <div><strong>0</strong><span>遥测与账号</span></div>
+    </section>
+
+    <section class="section" id="features">
+        <div class="section-head">
+            <span class="eyebrow"><i></i>FEATURES</span>
+            <h2>不只是好看，<br class="mobile-break">而是每天都会用</h2>
+            <p>把 Windows 上零散的小操作，收进一个随时可用的顶部小岛。</p>
+        </div>
+        <div class="feature-grid">
+            <article class="card feature">
+                <div class="icon blue">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>
+                </div>
+                <h3>正在播放</h3>
+                <p>封面、曲目、进度条与播放控制。紧凑态也能拖动进度，支持所有使用 Windows SMTC 的播放器。</p>
+            </article>
+            <article class="card feature">
+                <div class="icon green">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-3a8 8 0 0 1 16 0v3"/><rect x="2" y="13" width="4" height="7" rx="2"/><rect x="18" y="13" width="4" height="7" rx="2"/></svg>
+                </div>
+                <h3>多品牌耳机</h3>
+                <p>OPPO、华为、小米、vivo、索尼、漫步者等 12+ 品牌。电量、降噪、EQ、空间音效、查找耳机与贴合度检测。</p>
+            </article>
+            <article class="card feature">
+                <div class="icon purple">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V9m6 10V5m6 14v-7m4 7V8"/></svg>
+                </div>
+                <h3>AI 用量</h3>
+                <p>DeepSeek 余额、OpenCode Go 与 OpenDesign 的额度窗口。按你的优先级显示，用量紧张时上岛提醒。</p>
+            </article>
+            <article class="card feature">
+                <div class="icon orange">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="3"/><path d="M8 21h8M12 17v4"/></svg>
+                </div>
+                <h3>系统状态</h3>
+                <p>CPU、内存、网络实时曲线，音量、亮度、播放设备切换，以及麦克风、摄像头和大小写状态。</p>
+            </article>
+            <article class="card feature">
+                <div class="icon cyan">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="3"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>
+                </div>
+                <h3>剪贴板与文件架</h3>
+                <p>最近 30 条文本 / 文件、4 张图片一键回填。拖入文件自动展开，松手加入文件架，重启后保留。</p>
+            </article>
+            <article class="card feature">
+                <div class="icon pink">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H4z"/><path d="M8 19h8M12 15v4"/><path d="m9 10 3-3 3 3"/></svg>
+                </div>
+                <h3>不挡你的工作</h3>
+                <p>窗口靠近时自动收成顶部细线，回到桌面再展开；也可以贴边隐藏，鼠标移到顶部才出现。</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="section" id="screens">
+        <div class="section-head">
+            <span class="eyebrow"><i></i>SCREENSHOTS</span>
+            <h2>点开，就是全部</h2>
+            <p>九个面板，统一的深色设计。点击截图可以放大查看。</p>
+        </div>
+        <div class="screen-tabs" role="tablist" aria-label="截图切换">
+            <button class="tab active" data-shot="usage" data-alt="AI 用量面板">AI 用量</button>
+            <button class="tab" data-shot="system" data-alt="系统状态面板">系统</button>
+            <button class="tab" data-shot="calendar" data-alt="日历面板">日历</button>
+            <button class="tab" data-shot="settings" data-alt="设置面板">设置</button>
+            <button class="tab" data-shot="ai" data-alt="AI 用量配置窗口">AI 配置</button>
+        </div>
+        <div class="screen-stage">
+            <div class="shot-frame large">
+                <img class="shot" id="screen-image" src="assets/shot-usage.png" alt="AI 用量面板" width="680" height="590">
+            </div>
+            <p class="screen-caption" id="screen-caption">按平台顺序展示额度，接近上限时自动提醒。</p>
+        </div>
+    </section>
+
+    <section class="section split" id="details">
+        <div class="split-copy">
+            <span class="eyebrow"><i></i>DESIGNED FOR WINDOWS</span>
+            <h2>原生、克制、<br>不打扰</h2>
+            <p>没有额外的启动器、账号或云端。WinIsland 直接运行在桌面顶部，只在你需要的时候出现。</p>
+            <ul class="check-list">
+                <li><span>✓</span>无边框、无外层窗口，只有岛本身可见</li>
+                <li><span>✓</span>点击展开，点岛外或按 Esc 收起</li>
+                <li><span>✓</span>全局快捷键 <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>I</kbd></li>
+                <li><span>✓</span>字体大小可选小 / 中 / 大</li>
+                <li><span>✓</span>单实例运行，再次启动会把命令转发给已运行的岛</li>
+            </ul>
+        </div>
+        <div class="split-visual">
+            <div class="shot-frame">
+                <img class="shot" src="assets/shot-system.png" alt="系统状态、音量和耳机控制面板" width="680" height="590" loading="lazy">
+            </div>
+        </div>
+    </section>
+
+    <section class="section download" id="download">
+        <div class="download-card">
+            <div class="download-copy">
+                <span class="eyebrow"><i></i>LATEST RELEASE</span>
+                <h2>下载 WinIsland</h2>
+                <p>一个 exe，双击就能用。不需要安装 .NET，也不需要管理员权限。</p>
+                <ul class="meta-row">
+                    <li>win-x64</li>
+                    <li id="download-size">约 177 MB</li>
+                    <li>Windows 10 2004+</li>
+                </ul>
+            </div>
+            <div class="download-actions">
+                <a class="button primary big" id="download-main" href="https://github.com/chenwei1993/Winisland/releases/latest">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg>
+                    下载 <span id="version-main">1.2.1</span>
+                </a>
+                <a class="text-link" href="https://github.com/chenwei1993/Winisland/releases" target="_blank" rel="noopener">
+                    查看所有版本与更新日志 <span>→</span>
+                </a>
+                <p class="small-note">安装版正在规划中，当前提供免安装单文件版本。</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section faq" id="faq">
+        <div class="section-head">
+            <span class="eyebrow"><i></i>FAQ</span>
+            <h2>常见问题</h2>
+        </div>
+        <div class="faq-list">
+            <details>
+                <summary>需要安装 .NET 吗？</summary>
+                <p>不需要。发布的是自包含单文件版本，下载后直接运行，不会弹出运行时安装提示。</p>
+            </details>
+            <details>
+                <summary>支持哪些耳机？</summary>
+                <p>OPPO / OnePlus / realme、华为 / 荣耀、小米 / Redmi、vivo / iQOO、索尼、漫步者、森海塞尔、三星、Google、Bose、Nothing、AKG、水月雨、EarFun，以及部分 USB 2.4G 游戏耳机。具体可用的降噪、EQ、空间音效取决于型号与固件。</p>
+            </details>
+            <details>
+                <summary>AI 用量的 Key 安全吗？</summary>
+                <p>Key 使用 Windows DPAPI 加密，只保存在当前用户的电脑上；程序只向你配置的平台接口发请求，不上传到其它地方。也可以改用环境变量，不保存 Key。</p>
+            </details>
+            <details>
+                <summary>为什么是 GPL-3.0？</summary>
+                <p>多品牌耳机控制基于 GPL-3.0 的 EncoDeck / OppoPods 协议实现，因此整个项目以 GPL-3.0 发布，源码公开。</p>
+            </details>
+            <details>
+                <summary>会和我现在的耳机官方客户端冲突吗？</summary>
+                <p>耳机通常只允许一个厂商控制客户端占用控制通道。同时运行官方客户端、EncoDeck 或本程序时可能争用，关闭其中一个即可。</p>
+            </details>
+            <details>
+                <summary>有安装版吗？</summary>
+                <p>目前提供免安装单文件版本，安装版（Setup.exe）在规划中；数据和设置会保存在 <code>%AppData%\WinIsland</code>，升级或卸载默认不会删除。</p>
+            </details>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="brand small">
+            <span class="logo-mark small" aria-hidden="true"><i></i></span>
+            <span>WinIsland</span>
+        </div>
+        <p>为 Windows 打造的灵动岛。开源、免费、无遥测。</p>
+        <div class="footer-links">
+            <a href="https://github.com/chenwei1993/Winisland" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://github.com/chenwei1993/Winisland/blob/master/LICENSE" target="_blank" rel="noopener">GPL-3.0</a>
+            <a href="https://github.com/chenwei1993/Winisland/blob/master/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener">第三方声明</a>
+        </div>
+        <p class="copyright">© <span id="year">2026</span> WinIsland · 与各耳机及 AI 品牌无官方关联</p>
+    </div>
+</footer>
+
+<div class="lightbox" id="lightbox" hidden>
+    <button class="lightbox-close" aria-label="关闭">×</button>
+    <img id="lightbox-image" src="" alt="">
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>
