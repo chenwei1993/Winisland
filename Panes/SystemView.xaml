@@ -54,7 +54,7 @@
                             <TextBlock Text="处理器" Style="{StaticResource Caption}" />
                             <TextBlock Text="实时" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
                         </Grid>
-                        <TextBlock Text="{Binding CpuPercent, StringFormat={}{0:0}%}" FontSize="25"
+                        <TextBlock Text="{Binding CpuPercent, StringFormat={}{0:0}%}" FontSize="28"
                                    FontWeight="SemiBold" FontFamily="{StaticResource DisplayFont}" Margin="0,3,0,0" />
                         <ctrl:Sparkline Height="34" Margin="0,3,0,0" Values="{Binding CpuSamples}"
                                         Stroke="{StaticResource AccentBrush}" Fill="#146C8CFF" Maximum="100" />
@@ -69,7 +69,7 @@
                             <TextBlock Text="{Binding RamUsedText}" Style="{StaticResource Caption}"
                                        HorizontalAlignment="Right" />
                         </Grid>
-                        <TextBlock Text="{Binding RamPercent, StringFormat={}{0:0}%}" FontSize="25"
+                        <TextBlock Text="{Binding RamPercent, StringFormat={}{0:0}%}" FontSize="28"
                                    FontWeight="SemiBold" FontFamily="{StaticResource DisplayFont}" Margin="0,3,0,0" />
                         <ctrl:Sparkline Height="34" Margin="0,3,0,0" Values="{Binding RamSamples}"
                                         Stroke="{StaticResource PurpleBrush}" Fill="#12B06CFF" Maximum="100" />
@@ -85,12 +85,12 @@
                                        HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" MaxWidth="92" />
                         </Grid>
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <TextBlock Text="↓" FontSize="13" Foreground="{StaticResource AccentBrush}"
+                            <TextBlock Text="↓" FontSize="14.5" Foreground="{StaticResource AccentBrush}"
                                        VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding NetDownText}" FontSize="15" FontWeight="SemiBold" Margin="3,0,0,0" />
-                            <TextBlock Text="↑" FontSize="12" Foreground="{StaticResource GreenBrush}"
+                            <TextBlock Text="{Binding NetDownText}" FontSize="17" FontWeight="SemiBold" Margin="3,0,0,0" />
+                            <TextBlock Text="↑" FontSize="13.5" Foreground="{StaticResource GreenBrush}"
                                        VerticalAlignment="Center" Margin="10,0,0,0" />
-                            <TextBlock Text="{Binding NetUpText}" FontSize="10.5"
+                            <TextBlock Text="{Binding NetUpText}" FontSize="12"
                                        Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"
                                        Margin="3,0,0,0" />
                         </StackPanel>
@@ -108,7 +108,7 @@
                                        HorizontalAlignment="Right" />
                         </Grid>
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <TextBlock Text="{Binding BatteryDisplayText}" FontSize="25"
+                            <TextBlock Text="{Binding BatteryDisplayText}" FontSize="28"
                                        FontWeight="SemiBold" FontFamily="{StaticResource DisplayFont}" />
                             <Ellipse Width="6" Height="6" Fill="{StaticResource GreenBrush}" Margin="7,0,0,0"
                                      VerticalAlignment="Center">
@@ -151,16 +151,16 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Text="{Binding MuteGlyph}" FontFamily="{StaticResource IconFont}" FontSize="13"
+                    <TextBlock Text="{Binding MuteGlyph}" FontFamily="{StaticResource IconFont}" FontSize="14.5"
                                Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
                     <Slider Grid.Column="1" Style="{StaticResource VolumeSlider}" Margin="8,0" Minimum="0"
                             Maximum="100" Value="{Binding VolumePercent, Mode=OneWay}"
                             ValueChanged="Volume_ValueChanged" />
                     <TextBlock Grid.Column="2" Text="{Binding VolumePercent, StringFormat={}{0:0}%}"
-                               FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
                                VerticalAlignment="Center" Width="34" TextAlignment="Right" />
 
-                    <TextBlock Grid.Row="1" Text="&#xE706;" FontFamily="{StaticResource IconFont}" FontSize="13"
+                    <TextBlock Grid.Row="1" Text="&#xE706;" FontFamily="{StaticResource IconFont}" FontSize="14.5"
                                Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
                     <Slider x:Name="BrightnessSlider" Grid.Row="1" Grid.Column="1" Style="{StaticResource VolumeSlider}"
                             Margin="8,4,8,0" Minimum="0" Maximum="100"
@@ -169,7 +169,7 @@
                             ValueChanged="Brightness_ValueChanged"
                             ToolTip="此显示器需要支持 DDC/CI 才能调节亮度" />
                     <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding BrightnessPercent, StringFormat={}{0:0}%}"
-                               FontSize="10" Foreground="{StaticResource TextSecondaryBrush}"
+                               FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"
                                VerticalAlignment="Center" Width="34" TextAlignment="Right" Margin="0,4,0,0" />
 
                     <Button x:Name="OutputDeviceButton" Grid.Row="2" Grid.ColumnSpan="3"
@@ -182,13 +182,13 @@
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{Binding OutputDeviceGlyph}" FontFamily="{StaticResource IconFont}"
-                                       FontSize="12" Foreground="{StaticResource AccentBrush}"
+                                       FontSize="13.5" Foreground="{StaticResource AccentBrush}"
                                        VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="1" Text="{Binding OutputDeviceName}" FontSize="10.5"
+                            <TextBlock Grid.Column="1" Text="{Binding OutputDeviceName}" FontSize="12"
                                        Foreground="{StaticResource TextSecondaryBrush}" Margin="9,0,8,0"
                                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
                             <TextBlock x:Name="OutputDeviceChevron" Grid.Column="2" Text="&#xE70D;"
-                                       FontFamily="{StaticResource IconFont}" FontSize="9"
+                                       FontFamily="{StaticResource IconFont}" FontSize="10"
                                        Foreground="{StaticResource TextTertiaryBrush}"
                                        VerticalAlignment="Center" />
                         </Grid>
@@ -212,14 +212,14 @@
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource IconFont}"
-                                                           FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"
+                                                           FontSize="14.5" Foreground="{StaticResource TextSecondaryBrush}"
                                                            VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="11"
+                                                <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="12.5"
                                                            Foreground="{StaticResource TextPrimaryBrush}"
                                                            Margin="9,0,8,0" VerticalAlignment="Center"
                                                            TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Grid.Column="2" Text="{Binding CheckGlyph}"
-                                                           FontFamily="{StaticResource IconFont}" FontSize="11"
+                                                           FontFamily="{StaticResource IconFont}" FontSize="12.5"
                                                            Foreground="{StaticResource AccentBrush}"
                                                            VerticalAlignment="Center" />
                                             </Grid>
@@ -238,7 +238,7 @@
                 <StackPanel>
                     <Grid>
                         <StackPanel>
-                            <TextBlock Text="{Binding Buds.DeviceName}" FontSize="11.5" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Buds.DeviceName}" FontSize="13" FontWeight="SemiBold" />
                             <TextBlock Text="{Binding Buds.StatusText}" Style="{StaticResource Caption}"
                                        TextWrapping="Wrap" MaxWidth="300" HorizontalAlignment="Left"
                                        Margin="0,2,0,0" />
@@ -265,13 +265,13 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding Name}" FontSize="10.5"
+                                            <TextBlock Text="{Binding Name}" FontSize="12"
                                                        Foreground="{StaticResource TextPrimaryBrush}"
                                                        TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                                             <TextBlock Grid.Column="1" Text="{Binding StateText}" Style="{StaticResource Caption}"
                                                        VerticalAlignment="Center" Margin="8,0,8,0" />
                                             <TextBlock Grid.Column="2" Text="{Binding CheckGlyph}"
-                                                       FontFamily="{StaticResource IconFont}" FontSize="11"
+                                                       FontFamily="{StaticResource IconFont}" FontSize="12.5"
                                                        Foreground="{StaticResource AccentBrush}"
                                                        VerticalAlignment="Center" />
                                         </Grid>
@@ -290,7 +290,7 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel>
                             <TextBlock Text="左耳" Style="{StaticResource Caption}" />
-                            <TextBlock Text="{Binding Buds.LeftBatteryText}" FontSize="17" FontWeight="SemiBold"
+                            <TextBlock Text="{Binding Buds.LeftBatteryText}" FontSize="19" FontWeight="SemiBold"
                                        FontFamily="{StaticResource DisplayFont}" Margin="0,1,0,0" />
                             <ProgressBar Style="{StaticResource ThinProgress}" Maximum="100"
                                          Value="{Binding Buds.LeftBattery, Mode=OneWay, TargetNullValue=0}"
@@ -298,7 +298,7 @@
                         </StackPanel>
                         <StackPanel Grid.Column="1">
                             <TextBlock Text="右耳" Style="{StaticResource Caption}" />
-                            <TextBlock Text="{Binding Buds.RightBatteryText}" FontSize="17" FontWeight="SemiBold"
+                            <TextBlock Text="{Binding Buds.RightBatteryText}" FontSize="19" FontWeight="SemiBold"
                                        FontFamily="{StaticResource DisplayFont}" Margin="0,1,0,0" />
                             <ProgressBar Style="{StaticResource ThinProgress}" Maximum="100"
                                          Value="{Binding Buds.RightBattery, Mode=OneWay, TargetNullValue=0}"
@@ -306,7 +306,7 @@
                         </StackPanel>
                         <StackPanel Grid.Column="2">
                             <TextBlock Text="充电盒" Style="{StaticResource Caption}" />
-                            <TextBlock Text="{Binding Buds.CaseBatteryText}" FontSize="17" FontWeight="SemiBold"
+                            <TextBlock Text="{Binding Buds.CaseBatteryText}" FontSize="19" FontWeight="SemiBold"
                                        FontFamily="{StaticResource DisplayFont}" Margin="0,1,0,0" />
                             <ProgressBar Style="{StaticResource ThinProgress}" Maximum="100"
                                          Value="{Binding Buds.CaseBattery, Mode=OneWay, TargetNullValue=0}"
@@ -357,7 +357,7 @@
 
                     <StackPanel Orientation="Horizontal" Margin="2,4,14,0"
                                 Visibility="{Binding Buds.CanSpatialSound, Converter={StaticResource BoolToVis}}">
-                        <CheckBox Content="空间音效" FontSize="10.5"
+                        <CheckBox Content="空间音效" FontSize="12"
                                   Foreground="{StaticResource TextSecondaryBrush}"
                                   IsChecked="{Binding Buds.SpatialSound, Mode=TwoWay}" />
                         <TextBlock Text="增强电影和音乐的空间感" Style="{StaticResource Caption}"
@@ -384,17 +384,17 @@
                         <StackPanel Orientation="Horizontal" Margin="2,4,14,0"
                                     ToolTip="开启后降低耳机蓝牙音频延迟，适合游戏；可能影响连接稳定性和续航"
                                     Visibility="{Binding Buds.CanGameMode, Converter={StaticResource BoolToVis}}">
-                            <CheckBox Content="游戏模式" FontSize="10.5"
+                            <CheckBox Content="游戏模式" FontSize="12"
                                       Foreground="{StaticResource TextSecondaryBrush}"
                                       IsChecked="{Binding Buds.GameMode, Mode=TwoWay}" />
                             <TextBlock Text="降低音频延迟，适合游戏" Style="{StaticResource Caption}"
                                        VerticalAlignment="Center" Margin="7,0,0,0" />
                         </StackPanel>
-                        <CheckBox Content="佩戴检测" FontSize="10.5" Margin="2,4,14,0"
+                        <CheckBox Content="佩戴检测" FontSize="12" Margin="2,4,14,0"
                                   Foreground="{StaticResource TextSecondaryBrush}"
                                   IsChecked="{Binding Buds.WearDetection, Mode=TwoWay}"
                                   Visibility="{Binding Buds.CanWearDetection, Converter={StaticResource BoolToVis}}" />
-                        <CheckBox Content="双设备" FontSize="10.5" Margin="2,4,14,0"
+                        <CheckBox Content="双设备" FontSize="12" Margin="2,4,14,0"
                                   Foreground="{StaticResource TextSecondaryBrush}"
                                   IsChecked="{Binding Buds.DualDevice, Mode=TwoWay}"
                                   Visibility="{Binding Buds.CanDualDevice, Converter={StaticResource BoolToVis}}" />
@@ -421,7 +421,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Margin="2,5,14,0">
-                                        <TextBlock Text="{Binding Title}" FontSize="10.5"
+                                        <TextBlock Text="{Binding Title}" FontSize="12"
                                                    Foreground="{StaticResource TextSecondaryBrush}" />
                                         <TextBlock Text="{Binding Description}" Style="{StaticResource Caption}"
                                                    TextWrapping="Wrap" Margin="0,2,0,0"
@@ -454,7 +454,7 @@
                                                     Value="{Binding Value, Mode=OneWay}"
                                                     Tag="{Binding Id}"
                                                     ValueChanged="BudsOption_ValueChanged" />
-                                            <TextBlock Grid.Column="1" Text="{Binding ValueText}" FontSize="10"
+                                            <TextBlock Grid.Column="1" Text="{Binding ValueText}" FontSize="11"
                                                        Foreground="{StaticResource TextSecondaryBrush}"
                                                        VerticalAlignment="Center" />
                                         </Grid>
@@ -466,7 +466,7 @@
                 </StackPanel>
             </Border>
 
-            <TextBlock Text="设备状态" Style="{StaticResource PaneTitle}" Margin="2,14,0,8" FontSize="13" />
+            <TextBlock Text="设备状态" Style="{StaticResource PaneTitle}" Margin="2,14,0,8" FontSize="14.5" />
             <WrapPanel>
                 <Border Margin="0,0,6,6">
                     <Border.Style>
@@ -480,9 +480,9 @@
                         </Style>
                     </Border.Style>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE720;" FontFamily="{StaticResource IconFont}" FontSize="11"
+                        <TextBlock Text="&#xE720;" FontFamily="{StaticResource IconFont}" FontSize="12.5"
                                    Foreground="{StaticResource OrangeBrush}" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding MicStatusText}" FontSize="10" Margin="6,0,0,0" />
+                        <TextBlock Text="{Binding MicStatusText}" FontSize="11" Margin="6,0,0,0" />
                     </StackPanel>
                 </Border>
 
@@ -498,9 +498,9 @@
                         </Style>
                     </Border.Style>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xE722;" FontFamily="{StaticResource IconFont}" FontSize="11"
+                        <TextBlock Text="&#xE722;" FontFamily="{StaticResource IconFont}" FontSize="12.5"
                                    Foreground="{StaticResource GreenBrush}" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding CameraStatusText}" FontSize="10" Margin="6,0,0,0" />
+                        <TextBlock Text="{Binding CameraStatusText}" FontSize="11" Margin="6,0,0,0" />
                     </StackPanel>
                 </Border>
 
@@ -516,9 +516,9 @@
                         </Style>
                     </Border.Style>
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="A" FontSize="10" FontWeight="SemiBold"
+                        <TextBlock Text="A" FontSize="11" FontWeight="SemiBold"
                                    Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding CapsStatusText}" FontSize="10" Margin="6,0,0,0" />
+                        <TextBlock Text="{Binding CapsStatusText}" FontSize="11" Margin="6,0,0,0" />
                     </StackPanel>
                 </Border>
             </WrapPanel>
@@ -526,17 +526,17 @@
             <StackPanel Margin="2,4,2,0">
                 <Grid Margin="0,0,0,5">
                     <TextBlock Text="网络适配器" Style="{StaticResource Caption}" />
-                    <TextBlock Text="{Binding AdapterText}" FontSize="10" HorizontalAlignment="Right"
+                    <TextBlock Text="{Binding AdapterText}" FontSize="11" HorizontalAlignment="Right"
                                Foreground="{StaticResource TextSecondaryBrush}" />
                 </Grid>
                 <Grid Margin="0,0,0,5">
                     <TextBlock Text="磁盘" Style="{StaticResource Caption}" />
-                    <TextBlock Text="{Binding DiskText}" FontSize="10" HorizontalAlignment="Right"
+                    <TextBlock Text="{Binding DiskText}" FontSize="11" HorizontalAlignment="Right"
                                Foreground="{StaticResource TextSecondaryBrush}" />
                 </Grid>
                 <Grid Margin="0,0,0,5">
                     <TextBlock Text="运行时间" Style="{StaticResource Caption}" />
-                    <TextBlock Text="{Binding UptimeText}" FontSize="10" HorizontalAlignment="Right"
+                    <TextBlock Text="{Binding UptimeText}" FontSize="11" HorizontalAlignment="Right"
                                Foreground="{StaticResource TextSecondaryBrush}" />
                 </Grid>
             </StackPanel>

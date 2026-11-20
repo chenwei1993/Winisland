@@ -38,7 +38,7 @@
                                         Background="{StaticResource AccentSoftBrush}" VerticalAlignment="Top">
                                     <Grid>
                                         <TextBlock x:Name="glyph" Text="{Binding Glyph}"
-                                                   FontFamily="{StaticResource IconFont}" FontSize="14"
+                                                   FontFamily="{StaticResource IconFont}" FontSize="15.5"
                                                    Foreground="{StaticResource AccentBrush}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         <Image Source="{Binding Icon}" Stretch="UniformToFill">
@@ -49,12 +49,12 @@
                                     </Grid>
                                 </Border>
                                 <StackPanel Grid.Column="1" Margin="10,0,6,0">
-                                    <TextBlock Text="{Binding Title}" FontSize="11.5" FontWeight="SemiBold"
+                                    <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
                                                TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{Binding Message}" FontSize="10"
+                                    <TextBlock Text="{Binding Message}" FontSize="11"
                                                Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap"
                                                MaxHeight="32" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
-                                    <TextBlock Text="{Binding MetaText}" FontSize="9"
+                                    <TextBlock Text="{Binding MetaText}" FontSize="10"
                                                Foreground="{StaticResource TextTertiaryBrush}" Margin="0,3,0,0" />
                                 </StackPanel>
                                 <Button Grid.Column="2" Style="{StaticResource SmallIconButton}" Content="&#xE711;"
@@ -88,15 +88,15 @@
                     Visibility="{Binding HasAlerts, Converter={StaticResource InverseBoolToVis}}">
             <Border Width="70" Height="70" CornerRadius="20" Background="{StaticResource IconTileBrush}"
                     HorizontalAlignment="Center">
-                <TextBlock Text="&#xEA8F;" FontFamily="{StaticResource IconFont}" FontSize="26"
+                <TextBlock Text="&#xEA8F;" FontFamily="{StaticResource IconFont}" FontSize="29"
                            Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center"
                            VerticalAlignment="Center" />
             </Border>
-            <TextBlock Text="暂无通知" FontSize="14" FontWeight="SemiBold"
+            <TextBlock Text="暂无通知" FontSize="15.5" FontWeight="SemiBold"
                        FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center" Margin="0,14,0,4" />
-            <TextBlock Text="任何程序都可以把消息推送到灵动岛" FontSize="10.5"
+            <TextBlock Text="任何程序都可以把消息推送到灵动岛" FontSize="12"
                        Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" />
-            <TextBlock Text="命令行：WinIsland.exe --notify &quot;标题&quot; &quot;内容&quot;" FontSize="9.5"
+            <TextBlock Text="命令行：WinIsland.exe --notify &quot;标题&quot; &quot;内容&quot;" FontSize="10.5"
                        Foreground="{StaticResource TextTertiaryBrush}" HorizontalAlignment="Center"
                        Margin="0,6,0,0" />
         </StackPanel>

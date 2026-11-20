@@ -7,7 +7,7 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Margin="0,0,4,0">
             <Grid Margin="2,0,0,7">
-                <TextBlock Text="AI 用量" Style="{StaticResource PaneTitle}" FontSize="13" />
+                <TextBlock Text="AI 用量" Style="{StaticResource PaneTitle}" FontSize="14.5" />
                 <Button Content="刷新" Style="{StaticResource GhostButton}" HorizontalAlignment="Right"
                         Click="Refresh_Click" />
             </Grid>
@@ -18,7 +18,7 @@
             <Border Style="{StaticResource Card}" Padding="14,16" Margin="0,0,0,8"
                     Visibility="{Binding Usage.HasVisibleProviders, Converter={StaticResource InverseBoolToVis}}">
                 <StackPanel>
-                    <TextBlock Text="没有启用的平台" FontSize="12" FontWeight="SemiBold" />
+                    <TextBlock Text="没有启用的平台" FontSize="13.5" FontWeight="SemiBold" />
                     <TextBlock Text="在设置窗口里开启需要显示的平台，并可以调整顺序和刷新间隔"
                                Style="{StaticResource Caption}" Margin="0,3,0,0" TextWrapping="Wrap" />
                     <Button Content="打开设置" Style="{StaticResource GhostButton}" Margin="0,10,0,0"
@@ -34,11 +34,11 @@
                                 <Grid>
                                     <StackPanel Orientation="Horizontal">
                                         <Border Width="22" Height="22" CornerRadius="7" Background="#1F6C8CFF">
-                                            <TextBlock Text="{Binding Glyph}" FontSize="12"
+                                            <TextBlock Text="{Binding Glyph}" FontSize="13.5"
                                                        Foreground="{StaticResource AccentBrush}"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
-                                        <TextBlock Text="{Binding Name}" FontSize="11.5" FontWeight="SemiBold"
+                                        <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"
                                                    Margin="8,0,0,0" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <TextBlock Text="{Binding StatusText}" HorizontalAlignment="Right"
@@ -61,7 +61,7 @@
                                 <StackPanel Margin="0,8,0,0"
                                             Visibility="{Binding HasBalance, Converter={StaticResource BoolToVis}}">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding BalanceText}" FontSize="24" FontWeight="SemiBold"
+                                        <TextBlock Text="{Binding BalanceText}" FontSize="27" FontWeight="SemiBold"
                                                    FontFamily="{StaticResource DisplayFont}" />
                                         <TextBlock Text="{Binding BalanceDetailText}" Style="{StaticResource Caption}"
                                                    VerticalAlignment="Bottom" Margin="8,0,0,4" />
@@ -76,9 +76,9 @@
                                         <DataTemplate>
                                             <StackPanel Margin="0,5,0,0">
                                                 <Grid>
-                                                    <TextBlock Text="{Binding Label}" FontSize="10.5"
+                                                    <TextBlock Text="{Binding Label}" FontSize="12"
                                                                Foreground="{StaticResource TextSecondaryBrush}" />
-                                                    <TextBlock Text="{Binding PercentText}" FontSize="10.5"
+                                                    <TextBlock Text="{Binding PercentText}" FontSize="12"
                                                                FontWeight="SemiBold" HorizontalAlignment="Right" />
                                                 </Grid>
                                                 <ProgressBar Maximum="100" Value="{Binding UsedPercent}"
@@ -100,20 +100,20 @@
                                                     </ProgressBar.Style>
                                                 </ProgressBar>
                                                 <TextBlock Text="{Binding ResetText}" Style="{StaticResource Caption}"
-                                                           FontSize="9.5" Margin="0,3,0,0"
+                                                           FontSize="10.5" Margin="0,3,0,0"
                                                            Visibility="{Binding HasResetText, Converter={StaticResource BoolToVis}}" />
                                             </StackPanel>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
 
-                                <TextBlock Text="{Binding ErrorText}" FontSize="9.5"
+                                <TextBlock Text="{Binding ErrorText}" FontSize="10.5"
                                            Foreground="{StaticResource RedBrush}" TextWrapping="Wrap"
                                            Margin="0,5,0,0"
                                            Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}" />
 
                                 <TextBlock Text="{Binding UpdatedText}" Style="{StaticResource Caption}"
-                                           FontSize="9.5" Margin="0,7,0,0" />
+                                           FontSize="10.5" Margin="0,7,0,0" />
                             </StackPanel>
                         </Border>
                     </DataTemplate>
@@ -123,7 +123,7 @@
             <Border Style="{StaticResource Card}" Padding="12,10" Margin="0,2,0,0">
                 <Grid>
                     <StackPanel>
-                        <TextBlock Text="配置 API Key" FontSize="11.5" />
+                        <TextBlock Text="配置 API Key" FontSize="13" />
                         <TextBlock Text="在设置里填入 DeepSeek 或 OpenCode Go 的 Key。Key 用 Windows DPAPI 加密后保存在本机。"
                                    Style="{StaticResource Caption}" Margin="0,2,10,0"
                                    TextWrapping="Wrap" MaxWidth="300" HorizontalAlignment="Left" />

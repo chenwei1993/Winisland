@@ -27,9 +27,9 @@
                 <Rectangle Margin="3" Stroke="#336C8CFF" StrokeThickness="1" StrokeDashArray="3 3"
                            RadiusX="10" RadiusY="10" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE8B7;" FontFamily="{StaticResource IconFont}" FontSize="15"
+                    <TextBlock Text="&#xE8B7;" FontFamily="{StaticResource IconFont}" FontSize="17"
                                Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" />
-                    <TextBlock Text="把文件拖到岛上，随手带走" FontSize="10.5"
+                    <TextBlock Text="把文件拖到岛上，随手带走" FontSize="12"
                                Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center"
                                Margin="8,0,0,0" />
                 </StackPanel>
@@ -57,7 +57,7 @@
                                             Background="{StaticResource IconTileBrush}">
                                         <Grid>
                                             <TextBlock Text="{Binding Glyph}" FontFamily="{StaticResource IconFont}"
-                                                       FontSize="14" Foreground="{StaticResource TextSecondaryBrush}"
+                                                       FontSize="15.5" Foreground="{StaticResource TextSecondaryBrush}"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                                             <Border CornerRadius="9"
                                                     Visibility="{Binding HasThumbnail, Converter={StaticResource BoolToVis}}">
@@ -69,9 +69,9 @@
                                         </Grid>
                                     </Border>
                                     <StackPanel Grid.Column="1" Margin="10,0,6,0" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Name}" FontSize="11"
+                                        <TextBlock Text="{Binding Name}" FontSize="12.5"
                                                    TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Text="{Binding SizeText}" FontSize="9"
+                                        <TextBlock Text="{Binding SizeText}" FontSize="10"
                                                    Foreground="{StaticResource TextTertiaryBrush}" Margin="0,2,0,0" />
                                     </StackPanel>
                                     <Button Grid.Column="2" Style="{StaticResource SmallIconButton}"
@@ -87,9 +87,9 @@
 
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
                         Visibility="{Binding HasShelf, Converter={StaticResource InverseBoolToVis}}">
-                <TextBlock Text="&#xE8B7;" FontFamily="{StaticResource IconFont}" FontSize="30"
+                <TextBlock Text="&#xE8B7;" FontFamily="{StaticResource IconFont}" FontSize="33.5"
                            Foreground="{StaticResource TextTertiaryBrush}" HorizontalAlignment="Center" />
-                <TextBlock Text="把文件拖到灵动岛上" FontSize="12"
+                <TextBlock Text="把文件拖到灵动岛上" FontSize="13.5"
                            Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center"
                            Margin="0,8,0,0" />
             </StackPanel>

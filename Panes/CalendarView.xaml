@@ -14,11 +14,11 @@
 
         <Grid Margin="0,0,0,8">
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock x:Name="MonthText" Text="2026年10月" FontSize="15" FontWeight="SemiBold"
+                <TextBlock x:Name="MonthText" Text="2026年10月" FontSize="17" FontWeight="SemiBold"
                            FontFamily="{StaticResource DisplayFont}" VerticalAlignment="Center" />
                 <Border x:Name="TodayBadge" Background="{StaticResource AccentSoftBrush}" CornerRadius="6" Padding="6,2"
                         Margin="8,0,0,0" VerticalAlignment="Center">
-                    <TextBlock Text="本月" FontSize="9" Foreground="{StaticResource AccentBrush}" />
+                    <TextBlock Text="本月" FontSize="10" Foreground="{StaticResource AccentBrush}" />
                 </Border>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
@@ -60,7 +60,7 @@
                 <DataTemplate>
                     <Border x:Name="cell" Width="36" Height="36" CornerRadius="18" Background="Transparent"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock x:Name="dayText" Text="{Binding Day}" FontSize="12"
+                        <TextBlock x:Name="dayText" Text="{Binding Day}" FontSize="13.5"
                                    Foreground="#5CFFFFFF" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <DataTemplate.Triggers>
@@ -80,11 +80,11 @@
         <Border Grid.Row="3" Style="{StaticResource Card}" Padding="14,10" Margin="0,10,0,0">
             <Grid>
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="{Binding FullDateText}" FontSize="12" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding FullDateText}" FontSize="13.5" FontWeight="SemiBold" />
                     <TextBlock Text="{Binding WeekText}" Style="{StaticResource Caption}" Margin="0,2,0,0" />
                 </StackPanel>
                 <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding TimeWithSecondsText}" FontSize="26" FontWeight="SemiBold"
+                    <TextBlock Text="{Binding TimeWithSecondsText}" FontSize="29" FontWeight="SemiBold"
                                FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Right" />
                     <TextBlock Text="本地时间" Style="{StaticResource Caption}" HorizontalAlignment="Right" />
                 </StackPanel>

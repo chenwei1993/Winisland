@@ -18,14 +18,14 @@ namespace WinIsland;
 
 public partial class MainWindow : Window
 {
-    private const double IdleBaseWidth = 304;
-    private const double IdleHeight = 46;
-    private const double CompactWidth = 468;
-    private const double CompactHeight = 62;
-    private const double ExpandedWidth = 640;
-    private const double ExpandedHeight = 560;
-    private const double DropWidth = 460;
-    private const double DropHeight = 132;
+    private const double IdleBaseWidth = 348;
+    private const double IdleHeight = 50;
+    private const double CompactWidth = 500;
+    private const double CompactHeight = 66;
+    private const double ExpandedWidth = 680;
+    private const double ExpandedHeight = 590;
+    private const double DropWidth = 480;
+    private const double DropHeight = 140;
     private const double SliverWidth = 140;
     private const double SliverHeight = 5;
 
@@ -51,7 +51,7 @@ public partial class MainWindow : Window
     private readonly ServiceHub _s = App.Services;
 
     /// <summary>Idle face width. The usage chip reserves extra room while it is visible.</summary>
-    private double IdleWidth => IdleBaseWidth + (_s.Usage.HasChip ? 70 : 0);
+    private double IdleWidth => IdleBaseWidth + (_s.Usage.HasChip ? 84 : 0);
     private readonly DispatcherTimer _presentTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
     private readonly DispatcherTimer _fullscreenTimer = new() { Interval = TimeSpan.FromMilliseconds(1500) };
     private readonly DispatcherTimer _edgeTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };

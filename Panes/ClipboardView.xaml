@@ -44,7 +44,7 @@
                                         VerticalAlignment="Top">
                                     <Grid>
                                         <TextBlock Text="{Binding KindGlyph}" FontFamily="{StaticResource IconFont}"
-                                                   FontSize="13" Foreground="{StaticResource TextSecondaryBrush}"
+                                                   FontSize="14.5" Foreground="{StaticResource TextSecondaryBrush}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         <Border CornerRadius="9"
                                                 Visibility="{Binding Thumbnail, Converter={StaticResource NotNullToVis}}">
@@ -55,9 +55,9 @@
                                     </Grid>
                                 </Border>
                                 <StackPanel Grid.Column="1" Margin="10,0,6,0">
-                                    <TextBlock Text="{Binding Preview}" FontSize="11" TextWrapping="Wrap"
+                                    <TextBlock Text="{Binding Preview}" FontSize="12.5" TextWrapping="Wrap"
                                                MaxHeight="36" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{Binding MetaText}" FontSize="9"
+                                    <TextBlock Text="{Binding MetaText}" FontSize="10"
                                                Foreground="{StaticResource TextTertiaryBrush}" Margin="0,3,0,0" />
                                 </StackPanel>
                                 <Button Grid.Column="2" Style="{StaticResource SmallIconButton}" Content="&#xE711;"
@@ -73,13 +73,13 @@
                     Visibility="{Binding HasClipboard, Converter={StaticResource InverseBoolToVis}}">
             <Border Width="70" Height="70" CornerRadius="20" Background="{StaticResource IconTileBrush}"
                     HorizontalAlignment="Center">
-                <TextBlock Text="&#xE8C8;" FontFamily="{StaticResource IconFont}" FontSize="26"
+                <TextBlock Text="&#xE8C8;" FontFamily="{StaticResource IconFont}" FontSize="29"
                            Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center"
                            VerticalAlignment="Center" />
             </Border>
-            <TextBlock Text="剪贴板空空如也" FontSize="14" FontWeight="SemiBold"
+            <TextBlock Text="剪贴板空空如也" FontSize="15.5" FontWeight="SemiBold"
                        FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center" Margin="0,14,0,4" />
-            <TextBlock Text="复制任意文本、图片或文件后，会自动出现在这里" FontSize="10.5"
+            <TextBlock Text="复制任意文本、图片或文件后，会自动出现在这里" FontSize="12"
                        Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" />
         </StackPanel>
     </Grid>

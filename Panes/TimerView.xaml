@@ -28,12 +28,12 @@
                     <ctrl:RingProgress Value="{Binding CountdownProgress}" Thickness="9"
                                        Foreground="{StaticResource AccentBrush}" TrackBrush="#1FFFFFFF" />
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock Text="{Binding CountdownText}" FontSize="34" FontWeight="SemiBold"
+                        <TextBlock Text="{Binding CountdownText}" FontSize="38" FontWeight="SemiBold"
                                    FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center" />
-                        <TextBlock Text="{Binding CountdownLabel}" FontSize="10.5"
+                        <TextBlock Text="{Binding CountdownLabel}" FontSize="12"
                                    Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center"
                                    Margin="0,2,0,0" />
-                        <TextBlock Text="{Binding CountdownStatusText}" FontSize="9.5"
+                        <TextBlock Text="{Binding CountdownStatusText}" FontSize="10.5"
                                    Foreground="{StaticResource TextTertiaryBrush}" HorizontalAlignment="Center"
                                    Margin="0,3,0,0" />
                     </StackPanel>
@@ -59,9 +59,9 @@
 
             <!-- Stopwatch -->
             <StackPanel x:Name="StopwatchPanel" Visibility="Collapsed" VerticalAlignment="Center">
-                <TextBlock Text="{Binding StopwatchText}" FontSize="52" FontWeight="Light"
+                <TextBlock Text="{Binding StopwatchText}" FontSize="58" FontWeight="Light"
                            FontFamily="{StaticResource DisplayFont}" HorizontalAlignment="Center" />
-                <TextBlock Text="秒表" FontSize="10.5" Foreground="{StaticResource TextTertiaryBrush}"
+                <TextBlock Text="秒表" FontSize="12" Foreground="{StaticResource TextTertiaryBrush}"
                            HorizontalAlignment="Center" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,18,0,0">
                     <Button Content="{Binding StopwatchButtonText}" Style="{StaticResource PrimaryButton}"
