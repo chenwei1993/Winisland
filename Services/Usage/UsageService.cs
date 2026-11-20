@@ -50,10 +50,43 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
 
     public ObservableCollection<UsageProviderCard> Providers { get; } = new();
 
+    /// <summary>Cards shown in the usage pane: enabled providers in the user's order, then pushed ones.</summary>
+    public ObservableCollection<UsageProviderCard> VisibleProviders { get; } = new();
+
+    public bool HasVisibleProviders => VisibleProviders.Count > 0;
+
+    public int RefreshMinutes => Math.Clamp(_settings.Current.UsageRefreshMinutes, 1, 60);
+
     /// <summary>Metadata used by the dedicated settings window to build one row per provider.</summary>
-    public IReadOnlyList<UsageProviderInfo> ProviderInfos =>
-        _providers.Select(p => new UsageProviderInfo(
-            p.Id, p.Name, p.Glyph, p.EnvironmentKey, p.Description, p.HasBalanceSettings)).ToArray();
+    public IReadOnlyList<UsageProviderInfo> ProviderInfos
+    {
+        get
+        {
+            var ordered = new List<UsageProviderInfo>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var id in _settings.Current.UsageProviderOrder)
+            {
+                var provider = _providers.FirstOrDefault(p =>
+                    string.Equals(p.Id, id, StringComparison.OrdinalIgnoreCase));
+                if (provider is not null && seen.Add(provider.Id))
+                {
+                    ordered.Add(Describe(provider));
+                }
+            }
+
+            foreach (var provider in _providers.Where(p => seen.Add(p.Id)))
+            {
+                ordered.Add(Describe(provider));
+            }
+
+            return ordered;
+        }
+    }
+
+    private static UsageProviderInfo Describe(IUsageProvider provider) =>
+        new(provider.Id, provider.Name, provider.Glyph, provider.EnvironmentKey,
+            provider.Description, provider.HasBalanceSettings);
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -67,10 +100,16 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
     {
         get
         {
-            var configured = Providers.Count(p => p.IsConfigured);
-            return configured == 0
-                ? "在设置里填入 DeepSeek 或 OpenCode Go 的 API Key"
-                : $"{configured} 个服务 · 自动刷新";
+            var count = VisibleProviders.Count;
+            if (count == 0)
+            {
+                return "没有启用的平台，可在设置里开启";
+            }
+
+            var needsKey = VisibleProviders.Count(p => p.Status == UsageStatus.NeedsKey);
+            return needsKey > 0
+                ? $"{count} 个平台 · 每 {RefreshMinutes} 分钟刷新 · {needsKey} 个待配置"
+                : $"{count} 个平台 · 每 {RefreshMinutes} 分钟刷新";
         }
     }
 
@@ -119,7 +158,66 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
             Providers.Add(card);
         }
 
+        RebuildVisible();
         UpdateChip();
+    }
+
+    /// <summary>Rebuilds the pane's provider list from enabled providers and the saved order.</summary>
+    private void RebuildVisible()
+    {
+        var enabled = _providers
+            .Where(p => p.IsEnabled(_settings.Current))
+            .Select(p => p.Id)
+            .ToList();
+
+        var order = _settings.Current.UsageProviderOrder;
+        var ids = order
+            .Where(id => enabled.Contains(id, StringComparer.OrdinalIgnoreCase))
+            .Concat(enabled.Where(id => !order.Contains(id, StringComparer.OrdinalIgnoreCase)))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var desired = new List<UsageProviderCard>();
+        foreach (var id in ids)
+        {
+            var provider = _providers.FirstOrDefault(p =>
+                string.Equals(p.Id, id, StringComparison.OrdinalIgnoreCase));
+            if (provider is not null && _cards.TryGetValue(provider.Id, out var card))
+            {
+                desired.Add(card);
+            }
+        }
+
+        foreach (var card in _cards.Values.Where(c =>
+                     c.ProviderId.StartsWith("push:", StringComparison.Ordinal)))
+        {
+            if (!desired.Contains(card))
+            {
+                desired.Add(card);
+            }
+        }
+
+        if (VisibleProviders.SequenceEqual(desired))
+        {
+            return;
+        }
+
+        VisibleProviders.Clear();
+        foreach (var card in desired)
+        {
+            VisibleProviders.Add(card);
+        }
+
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasVisibleProviders)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SummaryText)));
+        Updated?.Invoke();
+    }
+
+    /// <summary>Called after the user rearranges providers; does not refetch.</summary>
+    public void ApplyProviderOrder()
+    {
+        Publish(RebuildVisible);
+        Publish(() => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SummaryText))));
     }
 
     private async Task LoopAsync(CancellationToken cancellationToken)
@@ -175,6 +273,8 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
                 });
             }
         }
+
+        Publish(RebuildVisible);
 
         if (due.Length == 0)
         {
@@ -480,10 +580,12 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
 
     private void Schedule(IUsageProvider provider, bool success, bool needsKey)
     {
+        var interval = TimeSpan.FromMinutes(RefreshMinutes);
+
         if (success)
         {
             _failures[provider.Id] = 0;
-            _nextFetch[provider.Id] = DateTime.UtcNow + provider.Interval;
+            _nextFetch[provider.Id] = DateTime.UtcNow + interval;
             return;
         }
 
@@ -496,8 +598,8 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
         var failures = _failures.TryGetValue(provider.Id, out var count) ? count + 1 : 1;
         _failures[provider.Id] = failures;
         var backoff = TimeSpan.FromSeconds(Math.Min(
-            provider.Interval.TotalSeconds * Math.Pow(2, failures),
-            TimeSpan.FromMinutes(10).TotalSeconds));
+            interval.TotalSeconds * Math.Pow(2, failures),
+            TimeSpan.FromMinutes(30).TotalSeconds));
         _nextFetch[provider.Id] = DateTime.UtcNow + backoff;
     }
 
@@ -616,6 +718,10 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
 
     public void OnSettingsChanged()
     {
+        // Apply a new refresh interval immediately instead of waiting for the old due time.
+        _nextFetch.Clear();
+
+        Publish(RebuildVisible);
         Publish(() =>
         {
             UpdateChip();
@@ -766,6 +872,7 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
             card.BalanceDetailText = string.Empty;
         }
 
+        RebuildVisible();
         UpdateChip();
         Updated?.Invoke();
     }

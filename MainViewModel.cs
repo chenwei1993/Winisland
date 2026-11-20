@@ -1040,6 +1040,84 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    private void SetUsageRefresh(int minutes)
+    {
+        minutes = Math.Clamp(minutes, 1, 60);
+        if (_s.Settings.Current.UsageRefreshMinutes == minutes)
+        {
+            return;
+        }
+
+        _s.Settings.Current.UsageRefreshMinutes = minutes;
+        _s.Settings.Save();
+        _s.Usage.OnSettingsChanged();
+        OnPropertyChanged(nameof(UsageRefresh1));
+        OnPropertyChanged(nameof(UsageRefresh2));
+        OnPropertyChanged(nameof(UsageRefresh5));
+        OnPropertyChanged(nameof(UsageRefresh10));
+        OnPropertyChanged(nameof(UsageRefresh15));
+    }
+
+    public bool UsageRefresh1
+    {
+        get => _s.Settings.Current.UsageRefreshMinutes == 1;
+        set
+        {
+            if (value)
+            {
+                SetUsageRefresh(1);
+            }
+        }
+    }
+
+    public bool UsageRefresh2
+    {
+        get => _s.Settings.Current.UsageRefreshMinutes == 2;
+        set
+        {
+            if (value)
+            {
+                SetUsageRefresh(2);
+            }
+        }
+    }
+
+    public bool UsageRefresh5
+    {
+        get => _s.Settings.Current.UsageRefreshMinutes == 5;
+        set
+        {
+            if (value)
+            {
+                SetUsageRefresh(5);
+            }
+        }
+    }
+
+    public bool UsageRefresh10
+    {
+        get => _s.Settings.Current.UsageRefreshMinutes == 10;
+        set
+        {
+            if (value)
+            {
+                SetUsageRefresh(10);
+            }
+        }
+    }
+
+    public bool UsageRefresh15
+    {
+        get => _s.Settings.Current.UsageRefreshMinutes == 15;
+        set
+        {
+            if (value)
+            {
+                SetUsageRefresh(15);
+            }
+        }
+    }
+
     public string PipeNameText => NotificationPipeServer.DisplayName;
 
     public string VersionText => typeof(MainViewModel).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";

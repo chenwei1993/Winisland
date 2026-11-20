@@ -65,10 +65,17 @@
                                                                FontSize="11" Margin="0,2,0,0" />
                                                 </StackPanel>
                                             </StackPanel>
-                                            <CheckBox Style="{StaticResource Switch}"
-                                                      HorizontalAlignment="Right" VerticalAlignment="Center"
-                                                      ToolTip="启用该平台"
-                                                      IsChecked="{Binding IsEnabled, Mode=TwoWay}" />
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                                        VerticalAlignment="Center">
+                                                <Button Content="&#xE70E;" Style="{StaticResource SmallIconButton}"
+                                                        ToolTip="上移" Click="MoveUp_Click" />
+                                                <Button Content="&#xE70D;" Style="{StaticResource SmallIconButton}"
+                                                        ToolTip="下移" Click="MoveDown_Click" />
+                                                <CheckBox Style="{StaticResource Switch}" Margin="8,0,0,0"
+                                                          VerticalAlignment="Center"
+                                                          ToolTip="在用量页显示该平台"
+                                                          IsChecked="{Binding IsEnabled, Mode=TwoWay}" />
+                                            </StackPanel>
                                         </Grid>
 
                                         <TextBox Style="{StaticResource FieldBox}" Margin="0,9,0,0" Tag="粘贴 API Key"
@@ -152,6 +159,31 @@
                                 <RadioButton Style="{StaticResource SegmentButton}" Content="95%"
                                              FontSize="12" GroupName="UsageWarn"
                                              IsChecked="{Binding ViewModel.UsageWarn95, Mode=TwoWay}" />
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Padding="12,9" Margin="0,8,0,0">
+                        <StackPanel>
+                            <TextBlock Text="刷新间隔" FontSize="13" />
+                            <TextBlock Text="多久请求一次各平台接口；失败时会自动减慢重试"
+                                       Style="{StaticResource Caption}" FontSize="11" Margin="0,3,0,0" />
+                            <WrapPanel Margin="0,7,0,0">
+                                <RadioButton Style="{StaticResource SegmentButton}" Content="1 分钟"
+                                             FontSize="12" GroupName="UsageRefresh"
+                                             IsChecked="{Binding ViewModel.UsageRefresh1, Mode=TwoWay}" />
+                                <RadioButton Style="{StaticResource SegmentButton}" Content="2 分钟"
+                                             FontSize="12" GroupName="UsageRefresh"
+                                             IsChecked="{Binding ViewModel.UsageRefresh2, Mode=TwoWay}" />
+                                <RadioButton Style="{StaticResource SegmentButton}" Content="5 分钟"
+                                             FontSize="12" GroupName="UsageRefresh"
+                                             IsChecked="{Binding ViewModel.UsageRefresh5, Mode=TwoWay}" />
+                                <RadioButton Style="{StaticResource SegmentButton}" Content="10 分钟"
+                                             FontSize="12" GroupName="UsageRefresh"
+                                             IsChecked="{Binding ViewModel.UsageRefresh10, Mode=TwoWay}" />
+                                <RadioButton Style="{StaticResource SegmentButton}" Content="15 分钟"
+                                             FontSize="12" GroupName="UsageRefresh"
+                                             IsChecked="{Binding ViewModel.UsageRefresh15, Mode=TwoWay}" />
                             </WrapPanel>
                         </StackPanel>
                     </Border>

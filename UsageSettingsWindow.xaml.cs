@@ -105,6 +105,31 @@ public partial class UsageSettingsWindow : Window
         }
     }
 
+    private void MoveUp_Click(object sender, RoutedEventArgs e) => MoveRow(sender, -1);
+
+    private void MoveDown_Click(object sender, RoutedEventArgs e) => MoveRow(sender, 1);
+
+    private void MoveRow(object sender, int delta)
+    {
+        if (sender is not FrameworkElement { DataContext: UsageProviderSettingRow row })
+        {
+            return;
+        }
+
+        var index = Rows.IndexOf(row);
+        var target = index + delta;
+        if (index < 0 || target < 0 || target >= Rows.Count)
+        {
+            return;
+        }
+
+        Rows.Move(index, target);
+
+        _s.Settings.Current.UsageProviderOrder = Rows.Select(r => r.ProviderId).ToList();
+        _s.Settings.Save();
+        _s.Usage.ApplyProviderOrder();
+    }
+
     private void SaveKey_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: UsageProviderSettingRow row })

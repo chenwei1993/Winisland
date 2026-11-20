@@ -32,6 +32,12 @@ public sealed class AppSettings
     public decimal DeepSeekLowBalance { get; set; } = 5m;
     public Dictionary<string, bool> UsageProviders { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>Provider ids in the order the user arranged them.</summary>
+    public List<string> UsageProviderOrder { get; set; } = new();
+
+    /// <summary>How often enabled providers are polled, in minutes.</summary>
+    public int UsageRefreshMinutes { get; set; } = 2;
+
     // Legacy per-provider flags kept only so settings written by 1.1.0 migrate cleanly.
     public bool DeepSeekEnabled { get; set; } = true;
     public bool OpenCodeGoEnabled { get; set; } = true;
@@ -39,7 +45,7 @@ public sealed class AppSettings
 
 public sealed class SettingsService
 {
-    private const int CurrentVersion = 4;
+    private const int CurrentVersion = 5;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -102,6 +108,18 @@ public sealed class SettingsService
                     }
 
                     Current.Version = 4;
+                    migrated = true;
+                }
+
+                if (Current.Version < 5)
+                {
+                    // v5 adds a user-arranged provider order and a refresh interval.
+                    if (Current.UsageRefreshMinutes <= 0)
+                    {
+                        Current.UsageRefreshMinutes = 2;
+                    }
+
+                    Current.Version = 5;
                     migrated = true;
                 }
 
