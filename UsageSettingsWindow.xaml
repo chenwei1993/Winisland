@@ -8,7 +8,7 @@
         Foreground="{StaticResource TextPrimaryBrush}"
         UseLayoutRounding="True" SnapsToDevicePixels="True"
         KeyDown="Window_KeyDown">
-    <Border Background="#F518181B" BorderBrush="#26FFFFFF" BorderThickness="1" CornerRadius="18"
+    <Border Background="#FF17171A" BorderBrush="#26FFFFFF" BorderThickness="1" CornerRadius="18"
             Padding="20,16">
         <Grid>
             <Grid.RowDefinitions>
