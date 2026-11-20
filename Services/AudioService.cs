@@ -11,7 +11,9 @@ public sealed class AudioService : IDisposable
     private DateTime _nextRetry = DateTime.MinValue;
     private bool _muted;
     private float _volume;
-    private bool _initialized;
+    private bool _hasReading;
+    private int _zeroStreak;
+    private int _readFailures;
     private string _deviceId = string.Empty;
 
     public bool IsAvailable => _endpoint is not null;
@@ -71,10 +73,16 @@ public sealed class AudioService : IDisposable
             if (_endpoint is not null)
             {
                 _deviceId = CoreAudio.GetDefaultRenderDeviceId() ?? string.Empty;
-                _endpoint.GetMasterVolumeLevelScalar(out _volume);
-                _endpoint.GetMute(out _muted);
-                _initialized = true;
-                Changed?.Invoke(_volume, _muted);
+                var hrVolume = _endpoint.GetMasterVolumeLevelScalar(out var volume);
+                var hrMute = _endpoint.GetMute(out var muted);
+                if (hrVolume >= 0 && hrMute >= 0)
+                {
+                    _readFailures = 0;
+                    if (ApplyReading(volume, muted))
+                    {
+                        Changed?.Invoke(_volume, _muted);
+                    }
+                }
             }
         }
         catch
@@ -98,19 +106,25 @@ public sealed class AudioService : IDisposable
 
         try
         {
-            _endpoint.GetMasterVolumeLevelScalar(out var volume);
-            _endpoint.GetMute(out var muted);
-
-            if (!_initialized || Math.Abs(volume - _volume) > 0.004f || muted != _muted)
+            var hrVolume = _endpoint.GetMasterVolumeLevelScalar(out var volume);
+            var hrMute = _endpoint.GetMute(out var muted);
+            if (hrVolume < 0 || hrMute < 0)
             {
-                var changed = !_initialized || Math.Abs(volume - _volume) > 0.004f || muted != _muted;
-                _volume = Math.Clamp(volume, 0f, 1f);
-                _muted = muted;
-                _initialized = true;
-                if (changed)
+                // A transient COM failure used to surface as "volume 0". Keep the
+                // last good reading; if the endpoint stays broken, rebuild it.
+                if (++_readFailures >= 5)
                 {
-                    Changed?.Invoke(_volume, _muted);
+                    _readFailures = 0;
+                    ReinitializeEndpoint();
                 }
+
+                return;
+            }
+
+            _readFailures = 0;
+            if (ApplyReading(volume, muted))
+            {
+                Changed?.Invoke(_volume, _muted);
             }
         }
         catch
@@ -118,6 +132,32 @@ public sealed class AudioService : IDisposable
             _endpoint = null;
             _nextRetry = DateTime.Now.AddSeconds(3);
         }
+    }
+
+    /// <summary>
+    /// Stores a reading and tells whether it should be published. A COM read can
+    /// succeed with 0 while the endpoint reconfigures (device switch, Bluetooth
+    /// profile change); publishing that used to flash the island 0% ↔ N%. A
+    /// sudden 0 is therefore only accepted once it persists.
+    /// </summary>
+    private bool ApplyReading(float volume, bool muted)
+    {
+        volume = Math.Clamp(volume, 0f, 1f);
+
+        if (volume <= 0.001f && !muted && _hasReading && _volume > 0.02f && ++_zeroStreak < 2)
+        {
+            return false;
+        }
+
+        _zeroStreak = 0;
+
+        var changed = !_hasReading ||
+                      Math.Abs(volume - _volume) > 0.004f ||
+                      muted != _muted;
+        _volume = volume;
+        _muted = muted;
+        _hasReading = true;
+        return changed;
     }
 
     public void SetVolume(double scalar)
@@ -131,8 +171,14 @@ public sealed class AudioService : IDisposable
         try
         {
             var context = Guid.Empty;
-            _endpoint.SetMasterVolumeLevelScalar((float)scalar, ref context);
+            if (_endpoint.SetMasterVolumeLevelScalar((float)scalar, ref context) < 0)
+            {
+                return;
+            }
+
             _volume = (float)scalar;
+            _hasReading = true;
+            _zeroStreak = 0;
             if (_muted)
             {
                 _endpoint.SetMute(false, ref context);
@@ -198,7 +244,7 @@ public sealed class AudioService : IDisposable
             _endpoint = null;
         }
 
-        _initialized = false;
+        _zeroStreak = 0;
         _nextRetry = DateTime.MinValue;
         TryInitialize();
     }

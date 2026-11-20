@@ -15,6 +15,8 @@ public sealed class BrightnessService : IDisposable
     private uint _maximum;
     private int _percent;
     private int _lastReported = -1;
+    private int _zeroStreak;
+    private DateTime _ignorePollUntil = DateTime.MinValue;
     private bool _polling;
     private DateTime _nextRetry = DateTime.MinValue;
 
@@ -92,11 +94,43 @@ public sealed class BrightnessService : IDisposable
             return;
         }
 
+        if (DateTime.UtcNow < _ignorePollUntil)
+        {
+            // Let the monitor apply a value the user just set; DDC/CI read-back is
+            // often stale for a moment and would snap the UI back.
+            return;
+        }
+
         _polling = true;
         try
         {
-            Native.GetMonitorBrightness(_handle, out _, out var current, out _);
-            var percent = (int)Math.Round((current - _minimum) * 100d / (_maximum - _minimum));
+            if (!Native.GetMonitorBrightness(_handle, out _, out var current, out _))
+            {
+                // DDC/CI reads fail regularly (monitor asleep, busy bus). The
+                // unchecked call used to yield 0%, alternating with the real value.
+                return;
+            }
+
+            if (current <= _minimum)
+            {
+                current = _minimum;
+            }
+
+            var range = _maximum - _minimum;
+            if (range == 0)
+            {
+                return;
+            }
+
+            var percent = (int)Math.Round((current - _minimum) * 100d / range);
+            percent = Math.Clamp(percent, 0, 100);
+
+            if (percent == 0 && _lastReported > 5 && ++_zeroStreak < 2)
+            {
+                return;
+            }
+
+            _zeroStreak = 0;
             if (Math.Abs(percent - _lastReported) >= 1)
             {
                 _lastReported = percent;
@@ -124,6 +158,8 @@ public sealed class BrightnessService : IDisposable
         percent = Math.Clamp(percent, 0, 100);
         _percent = percent;
         _lastReported = percent;
+        _zeroStreak = 0;
+        _ignorePollUntil = DateTime.UtcNow.AddMilliseconds(1200);
 
         var handle = _handle;
         var min = _minimum;
