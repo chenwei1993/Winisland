@@ -164,18 +164,22 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
         UpdateChip();
     }
 
-    /// <summary>Rebuilds the pane's provider list from enabled providers and the saved order.</summary>
+    /// <summary>
+    /// Rebuilds the pane's provider list: only enabled providers that have a
+    /// credential configured, in the saved order, followed by pushed cards.
+    /// </summary>
     private void RebuildVisible()
     {
-        var enabled = _providers
+        var available = _providers
             .Where(p => p.IsEnabled(_settings.Current))
+            .Where(p => _cards.TryGetValue(p.Id, out var card) && card.IsConfigured)
             .Select(p => p.Id)
             .ToList();
 
         var order = _settings.Current.UsageProviderOrder;
         var ids = order
-            .Where(id => enabled.Contains(id, StringComparer.OrdinalIgnoreCase))
-            .Concat(enabled.Where(id => !order.Contains(id, StringComparer.OrdinalIgnoreCase)))
+            .Where(id => available.Contains(id, StringComparer.OrdinalIgnoreCase))
+            .Concat(available.Where(id => !order.Contains(id, StringComparer.OrdinalIgnoreCase)))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
@@ -316,6 +320,8 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
                         card.StatusText = "未配置 API Key";
                         card.UpdatedText = string.Empty;
                     }
+
+                    RebuildVisible();
                 });
                 Schedule(provider, success: false, needsKey: true);
                 return;
@@ -408,6 +414,7 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
             CheckAlerts(card, result);
         }
 
+        RebuildVisible();
         UpdateChip();
         Updated?.Invoke();
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SummaryText)));
@@ -827,6 +834,7 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
             }
         }
 
+        RebuildVisible();
         UpdateChip();
         _ = RefreshNowAsync();
     }
