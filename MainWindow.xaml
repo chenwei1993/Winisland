@@ -6,7 +6,7 @@
         xmlns:ctrl="clr-namespace:WinIsland.Controls"
         mc:Ignorable="d"
         Title="WinIsland"
-        Width="348" Height="50"
+        Width="372" Height="52"
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
@@ -30,7 +30,7 @@
         Closing="Window_Closing">
 
     <Grid Background="Transparent">
-        <Border x:Name="IslandBorder" Width="348" Height="50" HorizontalAlignment="Center"
+        <Border x:Name="IslandBorder" Width="372" Height="52" HorizontalAlignment="Center"
                 VerticalAlignment="Top" Background="#FF0A0A0C" BorderThickness="1" CornerRadius="23"
                 ClipToBounds="True"
                 MouseLeftButtonUp="Island_MouseLeftButtonUp"
@@ -48,7 +48,7 @@
             </Border.Style>
             <Grid>
                 <!-- ── Idle ─────────────────────────────────────────────── -->
-                <Grid x:Name="IdleFace" Height="50" HorizontalAlignment="Center"
+                <Grid x:Name="IdleFace" Height="52" HorizontalAlignment="Center"
                       VerticalAlignment="Top" Cursor="Hand" IsHitTestVisible="True">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
                                 VerticalAlignment="Center" Margin="16,0">

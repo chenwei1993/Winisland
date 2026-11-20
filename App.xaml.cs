@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Threading;
 using System.Windows;
+using WinIsland.Infrastructure;
 using WinIsland.Services;
 
 namespace WinIsland;
@@ -19,6 +20,8 @@ public partial class App : Application
 
     public App()
     {
+        UiFontSize.Initialize();
+
         AppDomain.CurrentDomain.UnhandledException += (_, args) => LogCrash(args.ExceptionObject as Exception);
         DispatcherUnhandledException += (_, args) =>
         {
@@ -52,6 +55,7 @@ public partial class App : Application
 
         Services = new ServiceHub();
         Services.Start();
+        UiFontSize.ApplyMode(Services.Settings.Current.UiFontSizeMode);
 
         var window = new MainWindow();
         Island = window;

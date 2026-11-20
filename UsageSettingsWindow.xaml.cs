@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using WinIsland.Infrastructure;
 using WinIsland.Models;
 using WinIsland.Services;
 using WinIsland.Services.Usage;
@@ -30,6 +31,8 @@ public partial class UsageSettingsWindow : Window
         var workArea = SystemParameters.WorkArea;
         Width = Math.Min(620, workArea.Width - 40);
         Height = Math.Min(700, workArea.Height - 40);
+
+        Loaded += (_, _) => UiFontSize.ApplyAll();
 
         BuildRows();
     }

@@ -623,46 +623,84 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
 
         UsageProviderCard? bestCard = null;
         UsageMetricRow? bestMetric = null;
-        var bestLevel = -1;
+        var bestLevel = 0;
         var bestUsed = -1d;
 
-        void Consider(UsageProviderCard card, UsageMetricRow? metric, int level, double used)
+        if (mode == UsageIslandMode.Always)
         {
-            if (mode == UsageIslandMode.AlertsOnly && level < 1)
+            // Follow the user's provider order: the first platform that has data
+            // is the default chip, so the priority they configured is what shows.
+            foreach (var card in VisibleProviders)
             {
-                return;
-            }
-
-            if (level > bestLevel || (level == bestLevel && used > bestUsed))
-            {
-                bestCard = card;
-                bestMetric = metric;
-                bestLevel = level;
-                bestUsed = used;
-            }
-        }
-
-        foreach (var card in _cards.Values)
-        {
-            if (!IsCardEnabled(card.ProviderId))
-            {
-                continue;
-            }
-
-            foreach (var metric in card.Metrics)
-            {
-                if (mode == UsageIslandMode.AlertsOnly && metric.UsedPercent < warn)
+                if (!IsCardEnabled(card.ProviderId) || !card.IsConfigured)
                 {
                     continue;
                 }
 
-                Consider(card, metric, metric.Level, metric.UsedPercent);
+                var metric = card.Metrics
+                    .OrderByDescending(m => m.UsedPercent)
+                    .FirstOrDefault();
+
+                if (metric is null)
+                {
+                    if (!card.HasBalance)
+                    {
+                        continue;
+                    }
+
+                    bestCard = card;
+                    bestLevel = lowBalanceThreshold > 0 && card.BalanceAmount <= lowBalanceThreshold ? 2 : 0;
+                    break;
+                }
+
+                bestCard = card;
+                bestMetric = metric;
+                bestLevel = metric.Level;
+                break;
+            }
+        }
+        else
+        {
+            // Alerts-only mode still picks the most severe window so a warning on
+            // a lower-priority platform is never hidden.
+            void Consider(UsageProviderCard card, UsageMetricRow? metric, int level, double used)
+            {
+                if (level < 1)
+                {
+                    return;
+                }
+
+                if (level > bestLevel || (level == bestLevel && used > bestUsed))
+                {
+                    bestCard = card;
+                    bestMetric = metric;
+                    bestLevel = level;
+                    bestUsed = used;
+                }
             }
 
-            if (card.HasBalance && card.Metrics.Count == 0 && card.IsConfigured)
+            foreach (var card in _cards.Values)
             {
-                var low = lowBalanceThreshold > 0 && card.BalanceAmount <= lowBalanceThreshold;
-                Consider(card, null, low ? 2 : 0, low ? 100 : 0);
+                if (!IsCardEnabled(card.ProviderId))
+                {
+                    continue;
+                }
+
+                foreach (var metric in card.Metrics)
+                {
+                    if (metric.UsedPercent < warn)
+                    {
+                        continue;
+                    }
+
+                    Consider(card, metric, metric.Level, metric.UsedPercent);
+                }
+
+                if (card.HasBalance && card.Metrics.Count == 0 && card.IsConfigured)
+                {
+                    var low = lowBalanceThreshold > 0 && card.BalanceAmount <= lowBalanceThreshold;
+                    Consider(card, null, low ? 2 : 0, low ? 100 : 0);
+                }
             }
         }
 
@@ -681,7 +719,9 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
         {
             _hasChip = true;
             _chipText = $"{bestCard.ShortName} {bestCard.BalanceText}";
-            _chipGlyph = bestCard.Glyph;
+            _chipGlyph = bestCard.BalanceText.StartsWith(bestCard.Glyph, StringComparison.Ordinal)
+                ? string.Empty
+                : bestCard.Glyph;
             _chipLevel = bestLevel;
         }
 

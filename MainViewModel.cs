@@ -902,6 +902,58 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public BudsService Buds => _s.Buds;
 
+    private void SetUiFontSizeMode(int mode)
+    {
+        mode = Math.Clamp(mode, 0, 2);
+        if (_s.Settings.Current.UiFontSizeMode == mode)
+        {
+            return;
+        }
+
+        _s.Settings.Current.UiFontSizeMode = mode;
+        _s.Settings.Save();
+        UiFontSize.ApplyMode(mode);
+        OnPropertyChanged(nameof(UiFontSizeSmall));
+        OnPropertyChanged(nameof(UiFontSizeMedium));
+        OnPropertyChanged(nameof(UiFontSizeLarge));
+    }
+
+    public bool UiFontSizeSmall
+    {
+        get => _s.Settings.Current.UiFontSizeMode == 0;
+        set
+        {
+            if (value)
+            {
+                SetUiFontSizeMode(0);
+            }
+        }
+    }
+
+    public bool UiFontSizeMedium
+    {
+        get => _s.Settings.Current.UiFontSizeMode == 1;
+        set
+        {
+            if (value)
+            {
+                SetUiFontSizeMode(1);
+            }
+        }
+    }
+
+    public bool UiFontSizeLarge
+    {
+        get => _s.Settings.Current.UiFontSizeMode == 2;
+        set
+        {
+            if (value)
+            {
+                SetUiFontSizeMode(2);
+            }
+        }
+    }
+
     // ── AI usage ─────────────────────────────────────────────────────────
 
     public UsageService Usage => _s.Usage;

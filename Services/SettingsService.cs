@@ -24,6 +24,9 @@ public sealed class AppSettings
     public bool SmartAvoidWindows { get; set; }
     public bool ShowAppSwitches { get; set; }
 
+    /// <summary>0 = small, 1 = medium, 2 = large.</summary>
+    public int UiFontSizeMode { get; set; } = 1;
+
     // ── AI usage ────────────────────────────────────────────────────────
     public bool UsageEnabled { get; set; } = true;
     public UsageIslandMode UsageIslandMode { get; set; } = UsageIslandMode.AlertsOnly;
@@ -45,7 +48,7 @@ public sealed class AppSettings
 
 public sealed class SettingsService
 {
-    private const int CurrentVersion = 5;
+    private const int CurrentVersion = 6;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -120,6 +123,14 @@ public sealed class SettingsService
                     }
 
                     Current.Version = 5;
+                    migrated = true;
+                }
+
+                if (Current.Version < 6)
+                {
+                    // v6 adds the island font size choice.
+                    Current.UiFontSizeMode = Math.Clamp(Current.UiFontSizeMode, 0, 2);
+                    Current.Version = 6;
                     migrated = true;
                 }
 
