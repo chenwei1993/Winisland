@@ -1,14 +1,25 @@
-# WinIsland · Windows 灵动岛
+# WinIsland · Windows 灵动岛 / Dynamic Island for Windows
 
-一款为 Windows 打造的「灵动岛」：悬浮在屏幕顶部中央，把媒体、计时器、系统状态、剪贴板、文件与通知都收进一颗黑色药丸里。
+<p align="center">
+  <a href="https://github.com/chenwei1993/Winisland/releases/latest"><img src="https://img.shields.io/github/v/release/chenwei1993/Winisland?style=flat-square&label=release" alt="最新版本"></a>
+  <a href="https://github.com/chenwei1993/Winisland/releases"><img src="https://img.shields.io/github/downloads/chenwei1993/Winisland/total?style=flat-square&label=downloads" alt="下载量"></a>
+  <a href="https://github.com/chenwei1993/Winisland/blob/master/LICENSE"><img src="https://img.shields.io/github/license/chenwei1993/Winisland?style=flat-square" alt="GPL-3.0"></a>
+  <img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4?style=flat-square" alt="支持 Windows 10 和 Windows 11">
+</p>
+
+一款为 Windows 10/11 打造的「灵动岛」（Dynamic Island / 顶部刘海）桌面小组件：悬浮在屏幕顶部中央，把媒体、计时器、系统状态、剪贴板、文件与通知都收进一颗黑色药丸里。
+
+**WinIsland** is a **Dynamic Island for Windows 10/11**, built with WPF and .NET. It brings media controls, Bluetooth earbuds, AI usage (DeepSeek / OpenCode Go / OpenDesign), system monitor, clipboard history, file shelf and notifications into one lightweight top-of-screen notch.
 
 > 在线主页与截图：[chenwei1993.github.io/Winisland](https://chenwei1993.github.io/Winisland/)
 
-![alt text](image.png)
-![WinIsland 预览](docs/preview.png)
+> 关键词 / Keywords：Windows 灵动岛、Windows 11 刘海、Dynamic Island for Windows、WPF 桌面组件、蓝牙耳机控制、AI 用量监控、DeepSeek 余额、OpenCode Go 额度、OpenDesign 额度、剪贴板管理、系统监控。Windows desktop widget, Bluetooth earbuds, AI usage monitor, clipboard manager, system monitor.
 
-<p align="center"><img src="docs/compact.png" alt="紧凑形态" /></p>
-<p align="center"><img src="docs/app-switch.png" alt="应用切换上岛" /></p>
+![WinIsland 灵动岛主界面](image.png)
+![WinIsland Windows 灵动岛预览](docs/preview.png)
+
+<p align="center"><img src="docs/compact.png" alt="WinIsland 紧凑形态：媒体播放与电量" /></p>
+<p align="center"><img src="docs/app-switch.png" alt="WinIsland 应用切换上岛提示" /></p>
 
 ## 功能
 

@@ -3,14 +3,53 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>WinIsland · 为 Windows 打造的灵动岛</title>
-    <meta name="description" content="WinIsland 把灵动岛带到 Windows：媒体控制、多品牌耳机、AI 用量、系统监控、剪贴板与通知，一个顶部小岛全部搞定。免安装单文件，开源免费。">
+    <title>WinIsland · Windows 灵动岛 / Dynamic Island for Windows</title>
+    <meta name="description" content="WinIsland 是一个为 Windows 10/11 打造的灵动岛（Dynamic Island / 顶部刘海）：媒体控制、多品牌蓝牙耳机、DeepSeek / OpenCode Go / OpenDesign AI 用量、系统监控、剪贴板与通知。免安装单文件，开源免费。">
+    <meta name="keywords" content="Windows 灵动岛, Windows 11 刘海, Dynamic Island for Windows, Windows Dynamic Island, WPF desktop widget, 蓝牙耳机, AI 用量, DeepSeek, OpenCode Go, OpenDesign, 剪贴板管理, 系统监控">
+    <link rel="canonical" href="https://chenwei1993.github.io/Winisland/">
     <meta name="theme-color" content="#0a0a0d">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="WinIsland · 为 Windows 打造的灵动岛">
-    <meta property="og:description" content="媒体、耳机、AI 用量、系统状态与通知，全都收进屏幕顶部的一个小岛。">
-    <meta property="og:image" content="assets/shot-usage.png">
+    <meta property="og:site_name" content="WinIsland">
+    <meta property="og:url" content="https://chenwei1993.github.io/Winisland/">
+    <meta property="og:title" content="WinIsland · Windows 灵动岛 / Dynamic Island for Windows">
+    <meta property="og:description" content="媒体、耳机、AI 用量、系统状态与通知，全都收进 Windows 顶部的一个小岛。">
+    <meta property="og:image" content="https://chenwei1993.github.io/Winisland/assets/shot-usage.png">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:locale:alternate" content="en_US">
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="WinIsland · Dynamic Island for Windows">
+    <meta name="twitter:description" content="A Dynamic Island for Windows 10/11: media, Bluetooth earbuds, AI usage, system monitor, clipboard and notifications.">
+    <meta name="twitter:image" content="https://chenwei1993.github.io/Winisland/assets/shot-usage.png">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "WinIsland",
+        "alternateName": ["Windows 灵动岛", "Dynamic Island for Windows"],
+        "description": "A Dynamic Island for Windows 10/11 with media controls, Bluetooth earbuds, AI usage, system monitor, clipboard history and notifications.",
+        "operatingSystem": "Windows 10, Windows 11",
+        "applicationCategory": "UtilitiesApplication",
+        "applicationSubCategory": "Desktop Enhancement",
+        "softwareVersion": "1.2.1",
+        "downloadUrl": "https://github.com/chenwei1993/Winisland/releases/download/v1.2.1/WinIsland.exe",
+        "installUrl": "https://github.com/chenwei1993/Winisland/releases/latest",
+        "codeRepository": "https://github.com/chenwei1993/Winisland",
+        "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+        "screenshot": "https://chenwei1993.github.io/Winisland/assets/shot-usage.png",
+        "sameAs": ["https://github.com/chenwei1993/Winisland"],
+        "keywords": "Windows Dynamic Island, Windows 11 notch, WPF desktop widget, Bluetooth earbuds, AI usage monitor, DeepSeek, OpenCode Go, OpenDesign, clipboard manager, system monitor",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "author": {
+            "@type": "Person",
+            "name": "chenwei1993",
+            "url": "https://github.com/chenwei1993"
+        }
+    }
+    </script>
     <link rel="icon" href="assets/favicon.ico">
     <link rel="apple-touch-icon" href="assets/icon.png">
     <link rel="stylesheet" href="styles.css">
@@ -49,11 +88,15 @@
 <main>
     <section class="hero">
         <div class="hero-copy">
-            <span class="eyebrow"><i></i>Windows 10 / 11 · 免安装单文件</span>
+            <span class="eyebrow"><i></i>Windows 10 / 11 · Dynamic Island · 免安装单文件</span>
             <h1>把灵动岛<br><span class="gradient">带到 Windows</span></h1>
             <p class="lead">
                 媒体、耳机、AI 用量、系统状态、剪贴板与通知，全部收进屏幕顶部的一个小岛。
                 不挡视线，不占桌面，需要的时候一眼就能看到。
+            </p>
+            <p class="lead lead-en" lang="en">
+                A Dynamic Island for Windows 10/11 — media controls, Bluetooth earbuds, AI usage,
+                system monitor, clipboard and notifications in one top-of-screen notch.
             </p>
             <div class="cta-row">
                 <a class="button primary" id="download-hero" href="https://github.com/chenwei1993/Winisland/releases/download/v1.2.1/WinIsland.exe">
@@ -73,9 +116,9 @@
 
         <div class="hero-visual">
             <div class="hero-glow" aria-hidden="true"></div>
-            <img class="idle-pill" src="assets/shot-idle.png" alt="WinIsland 空闲状态，显示时间、日期、耳机电量和 AI 用量" width="492" height="52">
+            <img class="idle-pill" src="assets/shot-idle.png" alt="WinIsland Windows 灵动岛空闲状态：时间、日期、耳机电量与 AI 用量" width="492" height="52">
             <div class="shot-frame hero-frame">
-                <img class="shot" src="assets/shot-usage.png" alt="WinIsland 的 AI 用量面板" width="680" height="590">
+                <img class="shot" src="assets/shot-usage.png" alt="WinIsland Windows 灵动岛 AI 用量面板" width="680" height="590">
             </div>
             <div class="float-pill pill-a">
                 <span class="dot green"></span> 耳机已连接

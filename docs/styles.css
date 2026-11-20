@@ -294,6 +294,14 @@ h1 {
     line-height: 1.8;
 }
 
+.lead-en {
+    margin-top: 14px;
+    max-width: 560px;
+    color: var(--dim);
+    font-size: 14.5px;
+    line-height: 1.75;
+}
+
 .cta-row {
     display: flex;
     flex-wrap: wrap;
