@@ -22,7 +22,8 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
     private readonly List<IUsageProvider> _providers =
     [
         new DeepSeekUsageProvider(),
-        new OpenCodeGoUsageProvider()
+        new OpenCodeGoUsageProvider(),
+        new OpenDesignUsageProvider()
     ];
 
     private readonly Dictionary<string, UsageProviderCard> _cards = new(StringComparer.Ordinal);
@@ -86,7 +87,8 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
 
     private static UsageProviderInfo Describe(IUsageProvider provider) =>
         new(provider.Id, provider.Name, provider.Glyph, provider.EnvironmentKey,
-            provider.Description, provider.HasBalanceSettings);
+            provider.Description, provider.HasBalanceSettings,
+            provider.ExtraSettingLabel, provider.ExtraSettingHint, provider.KeyPlaceholder);
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -322,7 +324,9 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
             UsageFetchResult result;
             try
             {
-                result = await provider.FetchAsync(key, _settings.Current, cancellationToken).ConfigureAwait(false);
+                var extra = _secrets.Get($"{provider.Id}:extra");
+                result = await provider.FetchAsync(key, extra, _settings.Current, cancellationToken)
+                    .ConfigureAwait(false);
             }
             catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
@@ -363,8 +367,14 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
         switch (result.Status)
         {
             case UsageStatus.Ok:
-                card.StatusText = result.Balance is { Available: false } ? "余额不足" : "正常";
+                card.StatusText = result.Tier is { Length: > 0 } tier
+                    ? $"{tier} 套餐"
+                    : result.Balance is { Available: false } ? "余额不足" : "正常";
                 card.StatusLevel = result.Balance is { Available: false } ? 2 : 0;
+                break;
+            case UsageStatus.NoPlan:
+                card.StatusText = "无生效套餐";
+                card.StatusLevel = 1;
                 break;
             case UsageStatus.NeedsKey:
                 card.StatusText = "未配置 API Key";
@@ -388,7 +398,7 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
                 break;
         }
 
-        if (result.Status == UsageStatus.Ok)
+        if (result.Status is UsageStatus.Ok or UsageStatus.NoPlan)
         {
             ApplyMetrics(card, result.Metrics);
             ApplyBalance(card, result.Balance);
@@ -457,7 +467,9 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
         card.BalanceAmount = balance.Total;
         card.BalanceCurrency = balance.Currency;
         card.BalanceText = $"{symbol}{balance.Total:0.##}";
-        card.BalanceDetailText = $"赠送 {symbol}{balance.Granted:0.##} · 充值 {symbol}{balance.ToppedUp:0.##}";
+        card.BalanceDetailText = balance.HasBreakdown
+            ? $"赠送 {symbol}{balance.Granted:0.##} · 充值 {symbol}{balance.ToppedUp:0.##}"
+            : "钱包余额";
 
         if (string.Equals(card.ProviderId, "deepseek", StringComparison.Ordinal))
         {
@@ -814,6 +826,17 @@ public sealed class UsageService : INotifyPropertyChanged, IDisposable
         }
 
         UpdateChip();
+        _ = RefreshNowAsync();
+    }
+
+    /// <summary>Extra per-provider value such as OpenDesign's workspace id.</summary>
+    public string? GetExtraSetting(string providerId) => _secrets.Get($"{providerId}:extra");
+
+    public void SetExtraSetting(string providerId, string? value)
+    {
+        _secrets.Set($"{providerId}:extra", string.IsNullOrWhiteSpace(value) ? null : value.Trim());
+        _failures.TryRemove(providerId, out _);
+        _nextFetch.TryRemove(providerId, out _);
         _ = RefreshNowAsync();
     }
 

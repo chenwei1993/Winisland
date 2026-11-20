@@ -78,7 +78,8 @@
                                             </StackPanel>
                                         </Grid>
 
-                                        <TextBox Style="{StaticResource FieldBox}" Margin="0,9,0,0" Tag="粘贴 API Key"
+                                        <TextBox Style="{StaticResource FieldBox}" Margin="0,9,0,0"
+                                                 Tag="{Binding KeyPlaceholder}"
                                                  Text="{Binding KeyInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                                         <Grid Margin="0,7,0,0">
@@ -95,6 +96,25 @@
                                         <TextBlock Text="{Binding EnvironmentHint}" Style="{StaticResource Caption}"
                                                    FontSize="10.5" Margin="0,5,0,0" TextWrapping="Wrap"
                                                    Visibility="{Binding HasEnvironmentKey, Converter={StaticResource BoolToVis}}" />
+
+                                        <StackPanel Margin="0,9,0,0"
+                                                    Visibility="{Binding HasExtraSetting, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding ExtraLabel}" FontSize="12.5" />
+                                            <Grid Margin="0,5,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox Style="{StaticResource FieldBox}" Tag="工作区 ID"
+                                                         Margin="0,0,8,0"
+                                                         Text="{Binding ExtraInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                <Button Grid.Column="1" Content="保存"
+                                                        Style="{StaticResource GhostButton}" FontSize="12"
+                                                        Click="SaveExtra_Click" />
+                                            </Grid>
+                                            <TextBlock Text="{Binding ExtraHint}" Style="{StaticResource Caption}"
+                                                       FontSize="10.5" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                        </StackPanel>
 
                                         <StackPanel Margin="0,9,0,0"
                                                     Visibility="{Binding HasBalanceSettings, Converter={StaticResource BoolToVis}}">

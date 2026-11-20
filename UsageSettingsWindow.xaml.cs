@@ -78,6 +78,11 @@ public partial class UsageSettingsWindow : Window
                 Description = info.Description,
                 HasBalanceSettings = info.HasBalanceSettings,
                 KeyStatus = _s.Usage.GetKeyStatus(info.Id),
+                KeyPlaceholder = info.KeyPlaceholder,
+                HasExtraSetting = info.ExtraLabel is not null,
+                ExtraLabel = info.ExtraLabel ?? string.Empty,
+                ExtraHint = info.ExtraHint ?? string.Empty,
+                ExtraInput = info.ExtraLabel is not null ? (_s.Usage.GetExtraSetting(info.Id) ?? string.Empty) : string.Empty,
                 EnabledChanged = enabled =>
                 {
                     UsageProviderSettings.SetEnabled(_s.Settings.Current, info.Id, enabled);
@@ -161,6 +166,17 @@ public partial class UsageSettingsWindow : Window
         _s.Usage.SetKey(row.ProviderId, null);
         row.KeyInput = string.Empty;
         row.KeyStatus = _s.Usage.GetKeyStatus(row.ProviderId);
+    }
+
+    private void SaveExtra_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: UsageProviderSettingRow row })
+        {
+            return;
+        }
+
+        _s.Usage.SetExtraSetting(row.ProviderId, row.ExtraInput);
+        row.ExtraInput = _s.Usage.GetExtraSetting(row.ProviderId) ?? string.Empty;
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();

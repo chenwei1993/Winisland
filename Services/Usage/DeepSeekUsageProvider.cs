@@ -33,7 +33,7 @@ public sealed class DeepSeekUsageProvider : IUsageProvider
     public bool IsEnabled(AppSettings settings) =>
         settings.UsageEnabled && UsageProviderSettings.IsEnabled(settings, Id);
 
-    public async Task<UsageFetchResult> FetchAsync(string apiKey, AppSettings settings, CancellationToken cancellationToken)
+    public async Task<UsageFetchResult> FetchAsync(string apiKey, string? extra, AppSettings settings, CancellationToken cancellationToken)
     {
         var (status, body) = await UsageHttp.GetAsync(BalanceUrl, apiKey, cancellationToken).ConfigureAwait(false);
         if (status != HttpStatusCode.OK)

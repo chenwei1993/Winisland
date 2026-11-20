@@ -10,7 +10,9 @@ public enum UsageStatus
     Unauthorized,
     RateLimited,
     Offline,
-    Error
+    Error,
+    /// <summary>The credential works but the account has no active subscription.</summary>
+    NoPlan
 }
 
 /// <summary>One usage / quota window of a provider (5h, weekly, monthly, budget).</summary>
@@ -134,7 +136,7 @@ public sealed class UsageProviderCard : ObservableObject
 
     /// <summary>Only shown when the provider has a problem beyond "needs key".</summary>
     public bool HasError => Status is UsageStatus.Unauthorized or UsageStatus.RateLimited
-        or UsageStatus.Offline or UsageStatus.Error;
+        or UsageStatus.Offline or UsageStatus.Error or UsageStatus.NoPlan;
 
     // ── Balance (DeepSeek and other pay-as-you-go providers) ────────────
 
@@ -300,5 +302,22 @@ public sealed class UsageProviderSettingRow : ObservableObject
     {
         get => _keyStatus;
         set => Set(ref _keyStatus, value);
+    }
+
+    public string KeyPlaceholder { get; init; } = "粘贴 API Key";
+
+    /// <summary>Some providers need an extra value, e.g. OpenDesign's workspace id.</summary>
+    public bool HasExtraSetting { get; init; }
+
+    public string ExtraLabel { get; init; } = string.Empty;
+
+    public string ExtraHint { get; init; } = string.Empty;
+
+    private string _extraInput = string.Empty;
+
+    public string ExtraInput
+    {
+        get => _extraInput;
+        set => Set(ref _extraInput, value);
     }
 }
