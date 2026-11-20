@@ -12,12 +12,13 @@ using WinIsland.Interop;
 using WinIsland.Models;
 using WinIsland.Panes;
 using WinIsland.Services;
+using WinIsland.Services.Usage;
 
 namespace WinIsland;
 
 public partial class MainWindow : Window
 {
-    private const double IdleWidth = 304;
+    private const double IdleBaseWidth = 304;
     private const double IdleHeight = 46;
     private const double CompactWidth = 468;
     private const double CompactHeight = 62;
@@ -48,6 +49,9 @@ public partial class MainWindow : Window
     }
 
     private readonly ServiceHub _s = App.Services;
+
+    /// <summary>Idle face width. The usage chip reserves extra room while it is visible.</summary>
+    private double IdleWidth => IdleBaseWidth + (_s.Usage.HasChip ? 70 : 0);
     private readonly DispatcherTimer _presentTimer = new() { Interval = TimeSpan.FromMilliseconds(400) };
     private readonly DispatcherTimer _fullscreenTimer = new() { Interval = TimeSpan.FromMilliseconds(1500) };
     private readonly DispatcherTimer _edgeTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
@@ -106,6 +110,7 @@ public partial class MainWindow : Window
         SetWindowSize(_edgeMode ? SliverWidth : IdleWidth, _edgeMode ? SliverHeight : IdleHeight);
         SetIslandSize(_edgeMode ? SliverWidth : IdleWidth, _edgeMode ? SliverHeight : IdleHeight,
             _edgeMode ? SliverHeight / 2 : IdleHeight / 2);
+        IdleFace.Width = IdleWidth;
 
         if (_edgeMode)
         {
@@ -128,6 +133,8 @@ public partial class MainWindow : Window
         _s.Apps.Changed += OnForegroundAppChanged;
         _s.Buds.ConnectionChanged += OnBudsConnectionChanged;
         _s.Buds.LowBattery += OnBudsLowBattery;
+        _s.Usage.AlertRequested += OnUsageAlert;
+        _s.Usage.PropertyChanged += OnUsagePropertyChanged;
         _s.SystemNotifications.Received += OnSystemNotification;
 
         _presentTimer.Tick += (_, _) => OnPresentTimer();
@@ -236,6 +243,8 @@ public partial class MainWindow : Window
         _s.Apps.Changed -= OnForegroundAppChanged;
         _s.Buds.ConnectionChanged -= OnBudsConnectionChanged;
         _s.Buds.LowBattery -= OnBudsLowBattery;
+        _s.Usage.AlertRequested -= OnUsageAlert;
+        _s.Usage.PropertyChanged -= OnUsagePropertyChanged;
         _s.SystemNotifications.Received -= OnSystemNotification;
 
         Vm.Dispose();
@@ -338,6 +347,10 @@ public partial class MainWindow : Window
     {
         switch (command.Action)
         {
+            case IslandCommandAction.Usage:
+                _s.Usage.ApplyPush(command);
+                break;
+
             case IslandCommandAction.Show:
                 Expand();
                 break;
@@ -377,7 +390,7 @@ public partial class MainWindow : Window
 
                 if (_surface == Surface.Expanded)
                 {
-                    SelectPane(5);
+                    SelectPane(6);
                 }
                 else
                 {
@@ -1503,6 +1516,51 @@ public partial class MainWindow : Window
         PushAlert("耳机电量偏低", $"{side}剩余 {percent}%，建议放回充电盒。", "蓝牙耳机", "warning", 5);
     }
 
+    private void OnUsageAlert(UsageAlert alert)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(new Action(() => OnUsageAlert(alert)));
+            return;
+        }
+
+        PushAlert(alert.Title, alert.Message, "AI 用量", alert.Kind, alert.Seconds);
+    }
+
+    /// <summary>Re-reserves idle width after the usage chip display mode changes.</summary>
+    public void ApplyUsageChipSetting()
+    {
+        var width = IdleWidth;
+        IdleFace.Width = width;
+
+        if (_surface == Surface.Idle && !_edgeMode && Math.Abs(IslandBorder.Width - width) > 0.5)
+        {
+            AnimateTo(width, IdleHeight, IdleHeight / 2, 220);
+        }
+    }
+
+    private void OnUsagePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is not (nameof(UsageService.HasChip) or nameof(UsageService.ChipText)))
+        {
+            return;
+        }
+
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(new Action(() => ApplyUsageChipSetting()));
+            return;
+        }
+
+        ApplyUsageChipSetting();
+    }
+
+    private void UsageChip_Click(object sender, MouseButtonEventArgs e)
+    {
+        Expand(4);
+        e.Handled = true;
+    }
+
     private void OnClipboardItemAdded(ClipboardItem item)
     {
         if (_surface == Surface.Expanded)
@@ -1774,7 +1832,7 @@ public partial class MainWindow : Window
 
     private void ShowPane(int index)
     {
-        if (index < 0 || index > 7)
+        if (index < 0 || index > 8)
         {
             return;
         }
@@ -1788,7 +1846,7 @@ public partial class MainWindow : Window
 
         if (_activePaneIndex == index && _activePane is not null)
         {
-            if (index == 6)
+            if (index == 7)
             {
                 Vm.MarkAllRead();
             }
@@ -1806,7 +1864,7 @@ public partial class MainWindow : Window
             PaneHost.Children.Add(_activePane);
         }
 
-        if (index == 6)
+        if (index == 7)
         {
             Vm.MarkAllRead();
         }
@@ -1820,10 +1878,11 @@ public partial class MainWindow : Window
             1 => new TimerView(),
             2 => new CalendarView(),
             3 => new SystemView(),
-            4 => new ClipboardView(),
-            5 => new ShelfView(),
-            6 => new AlertsView(),
-            7 => new SettingsView(),
+            4 => new UsageView(),
+            5 => new ClipboardView(),
+            6 => new ShelfView(),
+            7 => new AlertsView(),
+            8 => new SettingsView(),
             _ => null
         };
     }
@@ -1914,7 +1973,7 @@ public partial class MainWindow : Window
 
     private void Settings_Click(object sender, RoutedEventArgs e)
     {
-        SelectPane(7);
+        SelectPane(8);
     }
 
     private void OnGlobalClick(Native.POINT point)
@@ -2008,7 +2067,7 @@ public partial class MainWindow : Window
         {
             if (_surface == Surface.Expanded)
             {
-                SelectPane(5);
+                SelectPane(6);
             }
             else
             {

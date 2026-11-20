@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using WinIsland.Infrastructure;
 using WinIsland.Models;
 using WinIsland.Services;
+using WinIsland.Services.Usage;
 
 namespace WinIsland;
 
@@ -900,6 +901,144 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     }
 
     public BudsService Buds => _s.Buds;
+
+    // ── AI usage ─────────────────────────────────────────────────────────
+
+    public UsageService Usage => _s.Usage;
+
+    public bool UsageEnabled
+    {
+        get => _s.Settings.Current.UsageEnabled;
+        set
+        {
+            if (_s.Settings.Current.UsageEnabled == value)
+            {
+                return;
+            }
+
+            _s.Settings.Current.UsageEnabled = value;
+            _s.Settings.Save();
+            _s.Usage.OnSettingsChanged();
+            OnPropertyChanged();
+        }
+    }
+
+    private void SetUsageIslandMode(UsageIslandMode mode)
+    {
+        if (_s.Settings.Current.UsageIslandMode == mode)
+        {
+            return;
+        }
+
+        _s.Settings.Current.UsageIslandMode = mode;
+        _s.Settings.Save();
+        _s.Usage.OnSettingsChanged();
+        OnPropertyChanged(nameof(UsageIslandAlertsOnly));
+        OnPropertyChanged(nameof(UsageIslandAlways));
+        OnPropertyChanged(nameof(UsageIslandOff));
+        App.Island?.ApplyUsageChipSetting();
+    }
+
+    public bool UsageIslandAlertsOnly
+    {
+        get => _s.Settings.Current.UsageIslandMode == UsageIslandMode.AlertsOnly;
+        set
+        {
+            if (value)
+            {
+                SetUsageIslandMode(UsageIslandMode.AlertsOnly);
+            }
+        }
+    }
+
+    public bool UsageIslandAlways
+    {
+        get => _s.Settings.Current.UsageIslandMode == UsageIslandMode.Always;
+        set
+        {
+            if (value)
+            {
+                SetUsageIslandMode(UsageIslandMode.Always);
+            }
+        }
+    }
+
+    public bool UsageIslandOff
+    {
+        get => _s.Settings.Current.UsageIslandMode == UsageIslandMode.Off;
+        set
+        {
+            if (value)
+            {
+                SetUsageIslandMode(UsageIslandMode.Off);
+            }
+        }
+    }
+
+    private void SetUsageWarn(int percent)
+    {
+        percent = Math.Clamp(percent, 50, 99);
+        if (_s.Settings.Current.UsageWarnPercent == percent)
+        {
+            return;
+        }
+
+        _s.Settings.Current.UsageWarnPercent = percent;
+        _s.Settings.Save();
+        _s.Usage.OnSettingsChanged();
+        OnPropertyChanged(nameof(UsageWarn70));
+        OnPropertyChanged(nameof(UsageWarn80));
+        OnPropertyChanged(nameof(UsageWarn90));
+        OnPropertyChanged(nameof(UsageWarn95));
+    }
+
+    public bool UsageWarn70
+    {
+        get => _s.Settings.Current.UsageWarnPercent == 70;
+        set
+        {
+            if (value)
+            {
+                SetUsageWarn(70);
+            }
+        }
+    }
+
+    public bool UsageWarn80
+    {
+        get => _s.Settings.Current.UsageWarnPercent == 80;
+        set
+        {
+            if (value)
+            {
+                SetUsageWarn(80);
+            }
+        }
+    }
+
+    public bool UsageWarn90
+    {
+        get => _s.Settings.Current.UsageWarnPercent == 90;
+        set
+        {
+            if (value)
+            {
+                SetUsageWarn(90);
+            }
+        }
+    }
+
+    public bool UsageWarn95
+    {
+        get => _s.Settings.Current.UsageWarnPercent == 95;
+        set
+        {
+            if (value)
+            {
+                SetUsageWarn(95);
+            }
+        }
+    }
 
     public string PipeNameText => NotificationPipeServer.DisplayName;
 

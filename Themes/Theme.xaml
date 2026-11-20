@@ -70,6 +70,37 @@
         <Setter Property="HorizontalAlignment" Value="Center" />
     </Style>
 
+    <Style x:Key="FieldBox" TargetType="{x:Type TextBox}">
+        <Setter Property="Background" Value="#12FFFFFF" />
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="CaretBrush" Value="{StaticResource TextPrimaryBrush}" />
+        <Setter Property="SelectionBrush" Value="{StaticResource AccentSoftBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="8,5" />
+        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, Segoe UI" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type TextBox}">
+                    <Border Background="{TemplateBinding Background}" CornerRadius="7"
+                            Padding="{TemplateBinding Padding}">
+                        <Grid>
+                            <TextBlock x:Name="Placeholder" Text="{TemplateBinding Tag}"
+                                       Foreground="#4DFFFFFF" FontSize="10.5" VerticalAlignment="Center"
+                                       IsHitTestVisible="False" Visibility="Collapsed" />
+                            <ScrollViewer x:Name="PART_ContentHost" />
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Text" Value="">
+                            <Setter TargetName="Placeholder" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- ── Cards / chips ──────────────────────────────────────────────── -->
     <Style x:Key="Card" TargetType="{x:Type Border}">
         <Setter Property="Background" Value="{StaticResource CardBrush}" />

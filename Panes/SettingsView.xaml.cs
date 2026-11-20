@@ -17,6 +17,11 @@ public partial class SettingsView : UserControl
         (Window.GetWindow(this) as MainWindow)?.ShowTestNotification();
     }
 
+    private void ManageUsage_Click(object sender, RoutedEventArgs e)
+    {
+        UsageSettingsWindow.ShowWindow();
+    }
+
     private void OpenData_Click(object sender, RoutedEventArgs e)
     {
         try

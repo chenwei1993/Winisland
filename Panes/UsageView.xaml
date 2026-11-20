@@ -1,0 +1,126 @@
+<UserControl x:Class="WinIsland.Panes.UsageView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="440" d:DesignHeight="448">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="0,0,4,0">
+            <Grid Margin="2,0,0,7">
+                <TextBlock Text="AI 用量" Style="{StaticResource PaneTitle}" FontSize="13" />
+                <Button Content="刷新" Style="{StaticResource GhostButton}" HorizontalAlignment="Right"
+                        Click="Refresh_Click" />
+            </Grid>
+
+            <TextBlock Text="{Binding Usage.SummaryText}" Style="{StaticResource Caption}" Margin="2,0,0,8"
+                       TextWrapping="Wrap" />
+
+            <ItemsControl ItemsSource="{Binding Usage.Providers}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Padding="13,10" Margin="0,0,0,8">
+                            <StackPanel>
+                                <Grid>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="22" Height="22" CornerRadius="7" Background="#1F6C8CFF">
+                                            <TextBlock Text="{Binding Glyph}" FontSize="12"
+                                                       Foreground="{StaticResource AccentBrush}"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <TextBlock Text="{Binding Name}" FontSize="11.5" FontWeight="SemiBold"
+                                                   Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding StatusText}" HorizontalAlignment="Right"
+                                               VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Caption}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding StatusLevel}" Value="1">
+                                                        <Setter Property="Foreground" Value="{StaticResource OrangeBrush}" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding StatusLevel}" Value="2">
+                                                        <Setter Property="Foreground" Value="{StaticResource RedBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+
+                                <StackPanel Margin="0,8,0,0"
+                                            Visibility="{Binding HasBalance, Converter={StaticResource BoolToVis}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding BalanceText}" FontSize="24" FontWeight="SemiBold"
+                                                   FontFamily="{StaticResource DisplayFont}" />
+                                        <TextBlock Text="{Binding BalanceDetailText}" Style="{StaticResource Caption}"
+                                                   VerticalAlignment="Bottom" Margin="8,0,0,4" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding SpendTodayText}" Style="{StaticResource Caption}"
+                                               Margin="0,2,0,0"
+                                               Visibility="{Binding HasSpendToday, Converter={StaticResource BoolToVis}}" />
+                                </StackPanel>
+
+                                <ItemsControl ItemsSource="{Binding Metrics}" Margin="0,4,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="0,5,0,0">
+                                                <Grid>
+                                                    <TextBlock Text="{Binding Label}" FontSize="10.5"
+                                                               Foreground="{StaticResource TextSecondaryBrush}" />
+                                                    <TextBlock Text="{Binding PercentText}" FontSize="10.5"
+                                                               FontWeight="SemiBold" HorizontalAlignment="Right" />
+                                                </Grid>
+                                                <ProgressBar Maximum="100" Value="{Binding UsedPercent}"
+                                                             Margin="0,4,0,0">
+                                                    <ProgressBar.Style>
+                                                        <Style TargetType="{x:Type ProgressBar}"
+                                                               BasedOn="{StaticResource ThinProgress}">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Level}" Value="1">
+                                                                    <Setter Property="Foreground"
+                                                                            Value="{StaticResource OrangeBrush}" />
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Level}" Value="2">
+                                                                    <Setter Property="Foreground"
+                                                                            Value="{StaticResource RedBrush}" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </ProgressBar.Style>
+                                                </ProgressBar>
+                                                <TextBlock Text="{Binding ResetText}" Style="{StaticResource Caption}"
+                                                           FontSize="9.5" Margin="0,3,0,0"
+                                                           Visibility="{Binding HasResetText, Converter={StaticResource BoolToVis}}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <TextBlock Text="{Binding ErrorText}" FontSize="9.5"
+                                           Foreground="{StaticResource RedBrush}" TextWrapping="Wrap"
+                                           Margin="0,5,0,0"
+                                           Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}" />
+
+                                <TextBlock Text="{Binding UpdatedText}" Style="{StaticResource Caption}"
+                                           FontSize="9.5" Margin="0,7,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Border Style="{StaticResource Card}" Padding="12,10" Margin="0,2,0,0">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="配置 API Key" FontSize="11.5" />
+                        <TextBlock Text="在设置里填入 DeepSeek 或 OpenCode Go 的 Key。Key 用 Windows DPAPI 加密后保存在本机。"
+                                   Style="{StaticResource Caption}" Margin="0,2,10,0"
+                                   TextWrapping="Wrap" MaxWidth="300" HorizontalAlignment="Left" />
+                    </StackPanel>
+                    <Button Content="打开设置" Style="{StaticResource GhostButton}" HorizontalAlignment="Right"
+                            VerticalAlignment="Center" Click="OpenSettings_Click" />
+                </Grid>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -269,7 +269,8 @@ public enum IslandCommandAction
     Collapse,
     Timer,
     Shelf,
-    Progress
+    Progress,
+    Usage
 }
 
 public sealed class IslandCommand
@@ -283,6 +284,17 @@ public sealed class IslandCommand
     public double Seconds { get; init; } = 5;
     public double Progress { get; init; }
     public IReadOnlyList<string> Files { get; init; } = Array.Empty<string>();
+
+    // Usage push (action = "usage")
+    public string Provider { get; init; } = string.Empty;
+    public string ProviderName { get; init; } = string.Empty;
+    public string Label { get; init; } = "用量";
+    public double Used { get; init; }
+    public double Limit { get; init; }
+    public double? UsedPercent { get; init; }
+    public DateTimeOffset? ResetAt { get; init; }
+    public double Balance { get; init; }
+    public string Currency { get; init; } = string.Empty;
 
     public static IslandCommand? Parse(string line)
     {
@@ -307,6 +319,7 @@ public sealed class IslandCommand
                     "timer" => IslandCommandAction.Timer,
                     "shelf" => IslandCommandAction.Shelf,
                     "progress" => IslandCommandAction.Progress,
+                    "usage" => IslandCommandAction.Usage,
                     _ => IslandCommandAction.Notify
                 };
 
@@ -314,6 +327,18 @@ public sealed class IslandCommand
                 if (progress > 1)
                 {
                     progress /= 100;
+                }
+
+                var used = ReadNumber(root, "used") ?? 0;
+                var limit = ReadNumber(root, "limit") ?? 0;
+                double? usedPercent = null;
+                if (limit > 0)
+                {
+                    usedPercent = Math.Clamp(used / limit * 100d, 0, 100);
+                }
+                else if (ReadNumber(root, "percent") is { } percent)
+                {
+                    usedPercent = Math.Clamp(percent <= 1 ? percent * 100d : percent, 0, 100);
                 }
 
                 return new IslandCommand
@@ -326,7 +351,16 @@ public sealed class IslandCommand
                     Minutes = ReadNumber(root, "minutes") ?? 5,
                     Seconds = ReadNumber(root, "seconds") ?? 5,
                     Progress = Math.Clamp(progress, 0, 1),
-                    Files = ReadStringArray(root, "files")
+                    Files = ReadStringArray(root, "files"),
+                    Provider = ReadString(root, "provider") ?? string.Empty,
+                    ProviderName = ReadString(root, "providerName") ?? ReadString(root, "name") ?? string.Empty,
+                    Label = ReadString(root, "label") ?? "用量",
+                    Used = used,
+                    Limit = limit,
+                    UsedPercent = usedPercent,
+                    ResetAt = ReadTimestamp(ReadString(root, "resetAt")),
+                    Balance = ReadNumber(root, "balance") ?? 0,
+                    Currency = ReadString(root, "currency") ?? string.Empty
                 };
             }
             catch
@@ -367,6 +401,15 @@ public sealed class IslandCommand
         }
 
         return null;
+    }
+
+    private static DateTimeOffset? ReadTimestamp(string? text)
+    {
+        return !string.IsNullOrWhiteSpace(text) &&
+               DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture,
+                   DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var parsed)
+            ? parsed
+            : null;
     }
 
     private static IReadOnlyList<string> ReadStringArray(System.Text.Json.JsonElement root, string name)

@@ -112,6 +112,45 @@
                                            VerticalAlignment="Center" Margin="4,0,0,0" />
                             </StackPanel>
                         </StackPanel>
+
+                        <Border Margin="18,0,0,0" Padding="7,3" CornerRadius="7" VerticalAlignment="Center"
+                                ToolTip="{Binding Usage.ChipTooltip}"
+                                MouseLeftButtonUp="UsageChip_Click"
+                                Visibility="{Binding Usage.HasChip, Converter={StaticResource BoolToVis}}">
+                            <Border.Style>
+                                <Style TargetType="{x:Type Border}">
+                                    <Setter Property="Background" Value="#1F6C8CFF" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Usage.ChipLevel}" Value="1">
+                                            <Setter Property="Background" Value="#26FF9F0A" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Usage.ChipLevel}" Value="2">
+                                            <Setter Property="Background" Value="#26FF453A" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Usage.ChipGlyph}" FontSize="11" VerticalAlignment="Center"
+                                           Margin="0,0,4,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="{x:Type TextBlock}">
+                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Usage.ChipLevel}" Value="1">
+                                                    <Setter Property="Foreground" Value="{StaticResource OrangeBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Usage.ChipLevel}" Value="2">
+                                                    <Setter Property="Foreground" Value="{StaticResource RedBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="{Binding Usage.ChipText}" FontSize="10.5"
+                                           Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Grid>
 
@@ -317,6 +356,12 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE770;" Style="{StaticResource NavIcon}" />
                                     <TextBlock Text="系统" Style="{StaticResource NavLabel}" />
+                                </StackPanel>
+                            </ListBoxItem>
+                            <ListBoxItem Style="{StaticResource NavItem}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE9D2;" Style="{StaticResource NavIcon}" />
+                                    <TextBlock Text="用量" Style="{StaticResource NavLabel}" />
                                 </StackPanel>
                             </ListBoxItem>
                             <ListBoxItem Style="{StaticResource NavItem}">

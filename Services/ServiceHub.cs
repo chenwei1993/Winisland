@@ -1,3 +1,5 @@
+using WinIsland.Services.Usage;
+
 namespace WinIsland.Services;
 
 public sealed class ServiceHub : IDisposable
@@ -17,6 +19,7 @@ public sealed class ServiceHub : IDisposable
     public ForegroundAppWatcher Apps { get; }
     public SystemNotificationWatcher SystemNotifications { get; }
     public NotificationPipeServer Pipes { get; }
+    public UsageService Usage { get; }
 
     public ServiceHub()
     {
@@ -39,6 +42,7 @@ public sealed class ServiceHub : IDisposable
         Apps = new ForegroundAppWatcher();
         SystemNotifications = new SystemNotificationWatcher();
         Pipes = new NotificationPipeServer();
+        Usage = new UsageService(Settings);
     }
 
     public void Start()
@@ -58,10 +62,12 @@ public sealed class ServiceHub : IDisposable
         Pipes.Start();
         _ = Media.StartAsync();
         Buds.Start();
+        Usage.Start();
     }
 
     public void Dispose()
     {
+        Usage.Dispose();
         Pipes.Dispose();
         Media.Dispose();
         Buds.Dispose();

@@ -25,6 +25,8 @@
 - 多品牌蓝牙耳机：OPPO / OnePlus / realme、华为、荣耀、小米 / Redmi、vivo / iQOO、索尼、漫步者、森海塞尔、三星、Google、Bose、Nothing 等；显示连接状态、电量、降噪、EQ、空间音效与型号支持的开关
 - 多设备切换：在耳机卡片里选择已配对的不同品牌耳机，自动切换当前控制设备
 - 品牌高级设置：耳机上报的自动关机、触控按键分配、环境声级别等选项自动生成列表 / 滑杆；支持查找耳机（响铃）与贴合度检测
+- AI 用量上岛：DeepSeek 余额 / 今日消耗、OpenCode Go 的 5 小时 / 每周 / 每月额度；阈值提醒，可常驻小徽标
+- AI 用量配置窗口：按平台单独管理 Key、启用开关和告警阈值，后续新增平台只需加一行配置
 - 复制文本 / 图片 / 文件时的剪贴板提示
 - 通知横幅：带图标与颜色分级（info / success / warning / error / timer）
 - 拖入文件时自动展开为放置区，松手加入文件架
@@ -37,10 +39,11 @@
 | 计时器 | 1/3/5/10/25 分钟预设、暂停/继续、+1 分钟、秒表 |
 | 日历 | 月视图、今日高亮、月份切换、实时时钟与周数 |
 | 系统 | CPU / 内存 / 网络速率实时曲线，电池、音量、亮度、播放设备切换、多品牌耳机电量 / 降噪 / EQ / 空间音效、网络适配器、磁盘、运行时长，麦克风/摄像头/大写锁定状态 |
+| 用量 | DeepSeek 余额与今日消耗、OpenCode Go 的 5 小时 / 每周 / 每月额度，阈值颜色、重置倒计时、手动刷新；Key 本机加密保存 |
 | 剪贴板 | 最近 30 条文本 / 文件、4 条图片（压缩后保存）、点击回填、暂停记录、清空 |
 | 文件架 | 拖入/拖出文件与文件夹、缩略图、打开、移除，重启后保留 |
 | 通知 | 外部程序推送的通知中心，未读角标、全部清除 |
-| 设置 | 开机自启、始终置顶、全屏时隐藏、通知音效、系统通知、窗口避让、贴边自动隐藏、切换应用提醒、剪贴板开关、快捷键与 API 说明、退出 |
+| 设置 | 开机自启、始终置顶、全屏时隐藏、通知音效、系统通知、窗口避让、贴边自动隐藏、切换应用提醒、剪贴板开关、AI 用量（独立配置窗口）、快捷键与 API 说明、退出 |
 
 **系统集成**
 
@@ -158,16 +161,20 @@ WinIsland.exe --collapse
 {"action":"timer","minutes":25,"title":"专注"}
 {"action":"shelf","files":["C:\\Reports\\weekly.pdf"]}
 {"action":"progress","title":"正在下载","message":"1.2 / 2.8 GB","progress":42,"seconds":8}
+{"action":"usage","provider":"my-cli","name":"我的 CLI","label":"5 小时","used":41,"limit":50,"resetAt":"2026-11-20T20:00:00Z"}
 {"action":"show"}
 {"action":"collapse"}
 ```
 
 `kind` 可选：`info`、`success`、`warning`、`error`、`timer`。`seconds` 控制横幅停留时长（1.5–30 秒）。`progress` 可以传 0–1 或 0–100，脚本连续推送即可得到实时进度条。
 
+`usage` 用于让其它 CLI / 插件把额度推上岛：`percent`（0–100，或 0–1 小数）与 `used` + `limit` 二选一，`resetAt` 为 ISO 时间，`balance` + `currency` 可显示余额。同名 `provider` 会更新同一张卡片，最多保留 1 个窗口，重复推送同 `resetAt` 只提醒一次。
+
 附带的 PowerShell 示例：
 
 ```powershell
 ./samples/Notify-Island.ps1 -Title "构建完成" -Message "全部 128 个测试通过" -App "CI" -Kind success
+./samples/Usage-Island.ps1 -Provider "opencode-go" -Name "OpenCode Go" -Label "5 小时" -Percent 62 -ResetAt "2026-11-20T20:00:00Z"
 ```
 
 ## 数据与隐私
@@ -175,6 +182,8 @@ WinIsland.exe --collapse
 - 设置：`%AppData%\WinIsland\settings.json`
 - 文件架：`%AppData%\WinIsland\shelf.json`
 - 耳机 LE Audio 记录：`%AppData%\WinIsland\le-audio-devices.json`
+- AI 用量 Key：`%AppData%\WinIsland\usage-secrets.json`（Windows DPAPI 加密，仅当前用户可解密）
+- AI 用量状态：`%AppData%\WinIsland\usage-state.json`（提醒去重、今日消耗估算）
 - 崩溃日志：`%AppData%\WinIsland\crash.log`
 - 调试日志：设置环境变量 `WINISLAND_DEBUG=1` 后写入 `debug.log`
 
@@ -186,8 +195,9 @@ WinIsland.exe --collapse
 App.xaml(.cs)            启动、单实例、托盘、命令行
 MainWindow.xaml(.cs)     岛的形态、动画、交互与面板切换
 MainViewModel.cs         绑定用的聚合状态
-Services/                媒体、音量、亮度、电源、系统监控、剪贴板、计时、文件架、通知管道
-Panes/                   展开面板的 8 个页面
+Services/                媒体、音量、亮度、电源、系统监控、剪贴板、计时、文件架、通知管道、AI 用量
+Panes/                   展开面板的 9 个页面
+UsageSettingsWindow      独立的 AI 用量配置窗口（按平台一行）
 Controls/                RingProgress / Sparkline 自绘控件
 Interop/                 Win32、Core Audio、DDC/CI、全局鼠标钩子
 Vendor/EncoDeck.*        多品牌耳机协议、蓝牙传输与设备状态引擎（GPL-3.0）
@@ -210,6 +220,8 @@ dist/                    生成好的 WinIsland.exe
 - 多品牌支持来自 EncoDeck 的型号能力库，部分型号仍属于协议实现而非逐项真机验证；遇到不生效的功能可以在设置里关闭对应控制。
 - 耳机同一时间通常只允许一个厂商控制客户端；运行官方 HeyMelody、EncoDeck 或品牌官方客户端时可能争用控制通道。
 - 耳机协议是社区逆向结果，固件更新后可能失效；连接失败不会影响岛的其他功能。
+- DeepSeek 官方只有余额接口，没有分时段用量接口；岛上的「今日消耗」由余额快照差估算，充值和接口延迟会使数字短期不精确。
+- OpenCode Go 的百分比来自官方 usage 接口，按 5 小时 / 每周 / 每月三个窗口返回；额度规则如有调整以服务端为准。
 
 ## 开源许可
 
