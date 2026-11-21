@@ -1,5 +1,8 @@
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using WinIsland.Models;
 
 namespace WinIsland.Panes;
 
@@ -12,14 +15,17 @@ public partial class TimerView : UserControl
 
     private void Mode_Changed(object sender, RoutedEventArgs e)
     {
-        if (CountdownPanel is null || StopwatchPanel is null)
+        if (CountdownPanel is null || StopwatchPanel is null || ReminderPanel is null)
         {
             return;
         }
 
         var countdown = TabCountdown.IsChecked == true;
+        var stopwatch = TabStopwatch.IsChecked == true;
+
         CountdownPanel.Visibility = countdown ? Visibility.Visible : Visibility.Collapsed;
-        StopwatchPanel.Visibility = countdown ? Visibility.Collapsed : Visibility.Visible;
+        StopwatchPanel.Visibility = stopwatch ? Visibility.Visible : Visibility.Collapsed;
+        ReminderPanel.Visibility = !countdown && !stopwatch ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void CountdownToggle_Click(object sender, RoutedEventArgs e)
@@ -80,5 +86,69 @@ public partial class TimerView : UserControl
     private void StopwatchReset_Click(object sender, RoutedEventArgs e)
     {
         App.Services.Timers.ResetStopwatch();
+    }
+
+    private void ReminderAdd_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryParseTarget(ReminderTimeBox.Text, out var target))
+        {
+            SetReminderHint("时间格式不对，请输入 HH:mm，例如 21:30", error: true);
+            return;
+        }
+
+        var item = App.Services.Reminders.Add(target, ReminderTitleBox.Text);
+        ReminderTitleBox.Text = string.Empty;
+        SetReminderHint($"已添加：{item.TargetText}", error: false);
+    }
+
+    private void ReminderQuick5_Click(object sender, RoutedEventArgs e) => AddAfter(5);
+
+    private void ReminderQuick15_Click(object sender, RoutedEventArgs e) => AddAfter(15);
+
+    private void ReminderQuick30_Click(object sender, RoutedEventArgs e) => AddAfter(30);
+
+    private void ReminderQuick60_Click(object sender, RoutedEventArgs e) => AddAfter(60);
+
+    private void AddAfter(int minutes)
+    {
+        var item = App.Services.Reminders.AddAfter(TimeSpan.FromMinutes(minutes), ReminderTitleBox.Text);
+        ReminderTitleBox.Text = string.Empty;
+        SetReminderHint($"已添加：{item.TargetText}", error: false);
+    }
+
+    private void ReminderAction_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { DataContext: ReminderItem item })
+        {
+            return;
+        }
+
+        App.Services.Reminders.Dismiss(item.Id);
+        SetReminderHint(item.IsFired ? "已关闭提醒" : "已取消提醒", error: false);
+    }
+
+    private static bool TryParseTarget(string text, out DateTime target)
+    {
+        target = default;
+        if (!DateTime.TryParseExact(text.Trim(), new[] { "H:mm", "HH:mm" },
+                CultureInfo.InvariantCulture, DateTimeStyles.None, out var time))
+        {
+            return false;
+        }
+
+        var now = DateTime.Now;
+        target = now.Date + time.TimeOfDay;
+        if (target <= now)
+        {
+            target = target.AddDays(1);
+        }
+
+        return true;
+    }
+
+    private void SetReminderHint(string text, bool error)
+    {
+        ReminderHint.Text = text;
+        ReminderHint.Foreground = (Brush)FindResource(error ? "RedBrush" : "TextTertiaryBrush");
     }
 }

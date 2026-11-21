@@ -61,7 +61,11 @@ public partial class MainWindow : Window
     private Surface _surface = Surface.Idle;
     private LiveActivity? _currentActivity;
     private LiveActivity? _transient;
+    private LiveActivity? _stickyActivity;
     private DateTime _transientUntil;
+    private Guid _stickyReminderId;
+    private IslandAlert? _stickyAlert;
+    private readonly Dictionary<Guid, IslandAlert> _reminderAlerts = new();
     private DateTime _mediaHoldUntil = DateTime.MinValue;
     private bool _lastMediaPlaying;
     private DateTime _lastAppSwitchShown = DateTime.MinValue;
@@ -136,6 +140,8 @@ public partial class MainWindow : Window
         _s.Buds.LowBattery += OnBudsLowBattery;
         _s.Usage.AlertRequested += OnUsageAlert;
         _s.Usage.PropertyChanged += OnUsagePropertyChanged;
+        _s.Reminders.Due += OnReminderDue;
+        _s.Reminders.Dismissed += OnReminderDismissed;
         _s.SystemNotifications.Received += OnSystemNotification;
 
         _presentTimer.Tick += (_, _) => OnPresentTimer();
@@ -176,6 +182,8 @@ public partial class MainWindow : Window
         _edgeTimer.Start();
 
         Nav.SelectedIndex = Vm.HasMedia ? 0 : 3;
+
+        Dispatcher.BeginInvoke(new Action(ShowNextFiredReminder), DispatcherPriority.Background);
 
         if (App.PendingCommand is { } pending)
         {
@@ -246,6 +254,8 @@ public partial class MainWindow : Window
         _s.Buds.LowBattery -= OnBudsLowBattery;
         _s.Usage.AlertRequested -= OnUsageAlert;
         _s.Usage.PropertyChanged -= OnUsagePropertyChanged;
+        _s.Reminders.Due -= OnReminderDue;
+        _s.Reminders.Dismissed -= OnReminderDismissed;
         _s.SystemNotifications.Received -= OnSystemNotification;
 
         Vm.Dispose();
@@ -269,16 +279,43 @@ public partial class MainWindow : Window
         }
     }
 
-    public void ShowSettings() => Expand(7);
+    public void ShowSettings() => Expand(8);
 
     public void ShowTestNotification()
     {
         PushAlert("灵动岛已就绪", "这是一条来自 WinIsland 的测试通知。", "WinIsland", "success");
     }
 
-    public void ClearAlerts() => Vm.ClearAlerts();
+    public void ClearAlerts()
+    {
+        var firedReminders = _s.Reminders.FiredPending.Select(r => r.Id).ToArray();
+        Vm.ClearAlerts();
 
-    public void RemoveAlert(IslandAlert alert) => Vm.RemoveAlert(alert);
+        foreach (var id in firedReminders)
+        {
+            _s.Reminders.Dismiss(id);
+        }
+    }
+
+    public void RemoveAlert(IslandAlert alert)
+    {
+        Guid? reminderId = null;
+        foreach (var pair in _reminderAlerts)
+        {
+            if (ReferenceEquals(pair.Value, alert))
+            {
+                reminderId = pair.Key;
+                break;
+            }
+        }
+
+        Vm.RemoveAlert(alert);
+
+        if (reminderId is { } id)
+        {
+            _s.Reminders.Dismiss(id);
+        }
+    }
 
     public void ApplyTopmost(bool topmost) => Topmost = topmost;
 
@@ -746,6 +783,12 @@ public partial class MainWindow : Window
 
     private void ShowIdle(bool force = false)
     {
+        if (_stickyActivity is not null)
+        {
+            ShowCompact(_stickyActivity);
+            return;
+        }
+
         if (!force && _surface == Surface.Idle)
         {
             return;
@@ -778,6 +821,11 @@ public partial class MainWindow : Window
     private void ShowCompact(LiveActivity activity)
     {
         if (_surface is Surface.Expanded or Surface.Drop)
+        {
+            return;
+        }
+
+        if (_stickyActivity is not null && !ReferenceEquals(activity, _stickyActivity))
         {
             return;
         }
@@ -834,6 +882,11 @@ public partial class MainWindow : Window
 
     private void ShowSliver(bool animate = true)
     {
+        if (_stickyActivity is not null)
+        {
+            return;
+        }
+
         if (!(_edgeMode || _smartMode) || _surface is Surface.Expanded or Surface.Drop or Surface.Sliver)
         {
             return;
@@ -979,7 +1032,7 @@ public partial class MainWindow : Window
         }
 
         var inside = IsCursorOverWindow();
-        if (inside || _transient is not null)
+        if (inside || _transient is not null || _stickyActivity is not null)
         {
             _edgeHideAt = DateTime.MinValue;
             _smartHideAt = DateTime.MinValue;
@@ -1157,6 +1210,11 @@ public partial class MainWindow : Window
 
     private bool IsCompactContentExpected()
     {
+        if (_stickyActivity is not null)
+        {
+            return true;
+        }
+
         if (_transient is not null)
         {
             if (DateTime.Now < _transientUntil)
@@ -1178,6 +1236,11 @@ public partial class MainWindow : Window
 
     private LiveActivity? ResolveActivity()
     {
+        if (_stickyActivity is not null)
+        {
+            return _stickyActivity;
+        }
+
         if (_transient is not null)
         {
             if (DateTime.Now < _transientUntil)
@@ -1282,6 +1345,7 @@ public partial class MainWindow : Window
             : Visibility.Collapsed;
 
         CompactPlayButton.Visibility = activity.ShowMediaControls ? Visibility.Visible : Visibility.Collapsed;
+        CompactDismissButton.Visibility = activity.ShowDismissButton ? Visibility.Visible : Visibility.Collapsed;
         CompactPlayButton.Content = activity.IsPlaying ? "\uE769" : "\uE768";
     }
 
@@ -1528,6 +1592,153 @@ public partial class MainWindow : Window
         PushAlert(alert.Title, alert.Message, "AI 用量", alert.Kind, alert.Seconds);
     }
 
+    // ── Reminders ─────────────────────────────────────────────────────
+    private void OnReminderDue(ReminderItem item)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(new Action(() => OnReminderDue(item)));
+            return;
+        }
+
+        var alert = EnsureReminderAlert(item);
+        if (_stickyActivity is null)
+        {
+            ShowStickyReminder(item, alert);
+        }
+    }
+
+    private void OnReminderDismissed(Guid id)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(new Action(() => OnReminderDismissed(id)));
+            return;
+        }
+
+        _reminderAlerts.Remove(id);
+
+        if (_stickyReminderId == id)
+        {
+            if (_stickyAlert is not null)
+            {
+                Vm.MarkAlertRead(_stickyAlert);
+            }
+
+            _stickyActivity = null;
+            _stickyAlert = null;
+            _stickyReminderId = Guid.Empty;
+            Present();
+        }
+
+        ShowNextFiredReminder();
+    }
+
+    private IslandAlert EnsureReminderAlert(ReminderItem item)
+    {
+        if (_reminderAlerts.TryGetValue(item.Id, out var existing))
+        {
+            return existing;
+        }
+
+        var alert = new IslandAlert
+        {
+            Title = item.Title,
+            Message = $"计划时间 {item.TargetText}",
+            App = "提醒",
+            Kind = "reminder"
+        };
+
+        _reminderAlerts[item.Id] = alert;
+        Vm.AddAlert(alert);
+        PlayAlertSound();
+        return alert;
+    }
+
+    private void ShowStickyReminder(ReminderItem item, IslandAlert alert)
+    {
+        if (_stickyActivity is not null)
+        {
+            return;
+        }
+
+        _stickyActivity = new LiveActivity
+        {
+            Kind = ActivityKind.Alert,
+            Glyph = "\uE823",
+            Title = item.Title,
+            Subtitle = $"时间到了 · {item.TargetText}",
+            ShowDismissButton = true,
+            Accent = Orange
+        };
+        _stickyReminderId = item.Id;
+        _stickyAlert = alert;
+        _transient = null;
+        _transientUntil = DateTime.MinValue;
+
+        if (_surface == Surface.Expanded)
+        {
+            Collapse();
+            return;
+        }
+
+        if (_surface is Surface.Drop || _isAnimating)
+        {
+            return;
+        }
+
+        if ((_edgeMode || _smartMode) && _surface == Surface.Sliver)
+        {
+            _edgeHideAt = DateTime.MaxValue;
+            _smartHideAt = DateTime.MaxValue;
+            RevealFromSliver();
+            return;
+        }
+
+        Present();
+    }
+
+    private void ShowNextFiredReminder()
+    {
+        if (_stickyActivity is not null)
+        {
+            return;
+        }
+
+        var next = _s.Reminders.FiredPending.FirstOrDefault();
+        if (next is null)
+        {
+            return;
+        }
+
+        ShowStickyReminder(next, EnsureReminderAlert(next));
+    }
+
+    private void CompactDismiss_Click(object sender, RoutedEventArgs e)
+    {
+        if (_stickyReminderId != Guid.Empty)
+        {
+            _s.Reminders.Dismiss(_stickyReminderId);
+        }
+    }
+
+    private void PlayAlertSound()
+    {
+        if (!_s.Settings.Current.PlaySound)
+        {
+            return;
+        }
+
+        try
+        {
+            System.Media.SystemSounds.Asterisk.Play();
+        }
+        catch
+        {
+            // Audio device unavailable.
+        }
+    }
+
     /// <summary>Re-reserves idle width after the usage chip display mode changes.</summary>
     public void ApplyUsageChipSetting()
     {
@@ -1769,6 +1980,11 @@ public partial class MainWindow : Window
 
     private void ShowTransient(LiveActivity activity, double seconds)
     {
+        if (_stickyActivity is not null)
+        {
+            return;
+        }
+
         _transient = activity;
         _transientUntil = DateTime.Now.AddSeconds(seconds);
 
@@ -1941,8 +2157,29 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (IsInteractiveSource(e.OriginalSource as DependencyObject))
+        {
+            return;
+        }
+
         Expand();
         e.Handled = true;
+    }
+
+    private static bool IsInteractiveSource(DependencyObject? source)
+    {
+        while (source is not null)
+        {
+            if (source is System.Windows.Controls.Primitives.ButtonBase or Slider
+                or System.Windows.Controls.Primitives.TextBoxBase)
+            {
+                return true;
+            }
+
+            source = VisualTreeHelper.GetParent(source);
+        }
+
+        return false;
     }
 
     private void Island_MouseEnter(object sender, MouseEventArgs e)

@@ -249,6 +249,10 @@
                                     </EventTrigger>
                                 </Grid.Triggers>
                             </Grid>
+                            <Button x:Name="CompactDismissButton" Style="{StaticResource GhostButton}"
+                                    Content="关闭提醒" FontSize="12.5" Padding="12,4" Height="30"
+                                    Margin="0,0,6,0" Visibility="Collapsed"
+                                    Click="CompactDismiss_Click" />
                             <Button x:Name="CompactPlayButton" Style="{StaticResource IconButton}"
                                     Width="34" Height="34" FontSize="20" Visibility="Collapsed"
                                     Click="CompactPlay_Click" />

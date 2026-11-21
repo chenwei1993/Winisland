@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
+using System.Text.Json.Serialization;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using WinIsland.Infrastructure;
@@ -232,6 +233,7 @@ public sealed class IslandAlert
         "warning" => "\uE7BA",
         "error" => "\uE783",
         "timer" => "\uE823",
+        "reminder" => "\uE823",
         "system" => "\uEA8F",
         _ => "\uE946"
     };
@@ -239,6 +241,58 @@ public sealed class IslandAlert
     public string MetaText => $"{App} · {Time:HH:mm}";
 
     public string Tooltip => $"{Title}\n{Message}";
+}
+
+/// <summary>A scheduled reminder that stays on the island until dismissed.</summary>
+public sealed class ReminderItem : ObservableObject
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+
+    public string Title { get; set; } = "提醒";
+
+    public DateTime TargetTime { get; set; }
+
+    private bool _isFired;
+
+    public bool IsFired
+    {
+        get => _isFired;
+        set
+        {
+            if (Set(ref _isFired, value))
+            {
+                OnPropertyChanged(nameof(StatusText));
+                OnPropertyChanged(nameof(ActionText));
+            }
+        }
+    }
+
+    [JsonIgnore]
+    public string TargetText
+    {
+        get
+        {
+            var date = TargetTime.Date;
+            var today = DateTime.Today;
+            if (date == today)
+            {
+                return $"今天 {TargetTime:HH:mm}";
+            }
+
+            if (date == today.AddDays(1))
+            {
+                return $"明天 {TargetTime:HH:mm}";
+            }
+
+            return $"{TargetTime:M月d日 HH:mm}";
+        }
+    }
+
+    [JsonIgnore]
+    public string StatusText => IsFired ? "已提醒" : "等待中";
+
+    [JsonIgnore]
+    public string ActionText => IsFired ? "关闭" : "取消";
 }
 
 /// <summary>A system notification mirrored from the Windows notification center.</summary>
@@ -475,5 +529,7 @@ public sealed class LiveActivity
     public bool ShowRing { get; init; }
     public bool ShowMediaControls { get; init; }
     public bool IsPlaying { get; init; }
+    /// <summary>Shows the sticky "关闭提醒" button on the compact face.</summary>
+    public bool ShowDismissButton { get; init; }
     public Brush? Accent { get; init; }
 }

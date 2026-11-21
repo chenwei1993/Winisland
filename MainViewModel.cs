@@ -728,6 +728,17 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         UpdateAlertMeta();
     }
 
+    public void MarkAlertRead(IslandAlert alert)
+    {
+        if (alert.IsRead)
+        {
+            return;
+        }
+
+        alert.IsRead = true;
+        UpdateAlertMeta();
+    }
+
     private void UpdateAlertMeta()
     {
         UnreadCount = Alerts.Count(a => !a.IsRead);
@@ -957,6 +968,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     // ── AI usage ─────────────────────────────────────────────────────────
 
     public UsageService Usage => _s.Usage;
+
+    public ReminderService Reminders => _s.Reminders;
 
     public bool UsageEnabled
     {
