@@ -96,9 +96,9 @@ public partial class TimerView : UserControl
             return;
         }
 
-        var item = App.Services.Reminders.Add(target, ReminderTitleBox.Text);
+        var item = App.Services.Reminders.Add(target, ReminderTitleBox.Text, SelectedRepeat);
         ReminderTitleBox.Text = string.Empty;
-        SetReminderHint($"已添加：{item.TargetText}", error: false);
+        SetReminderHint($"已添加：{item.ScheduleText}", error: false);
     }
 
     private void ReminderQuick5_Click(object sender, RoutedEventArgs e) => AddAfter(5);
@@ -111,9 +111,33 @@ public partial class TimerView : UserControl
 
     private void AddAfter(int minutes)
     {
-        var item = App.Services.Reminders.AddAfter(TimeSpan.FromMinutes(minutes), ReminderTitleBox.Text);
+        var item = App.Services.Reminders.AddAfter(TimeSpan.FromMinutes(minutes),
+            ReminderTitleBox.Text, SelectedRepeat);
         ReminderTitleBox.Text = string.Empty;
-        SetReminderHint($"已添加：{item.TargetText}", error: false);
+        SetReminderHint($"已添加：{item.ScheduleText}", error: false);
+    }
+
+    private ReminderRepeat SelectedRepeat
+    {
+        get
+        {
+            if (RepeatDaily.IsChecked == true)
+            {
+                return ReminderRepeat.Daily;
+            }
+
+            if (RepeatWeekdays.IsChecked == true)
+            {
+                return ReminderRepeat.Weekdays;
+            }
+
+            if (RepeatWeekly.IsChecked == true)
+            {
+                return ReminderRepeat.Weekly;
+            }
+
+            return ReminderRepeat.None;
+        }
     }
 
     private void ReminderAction_Click(object sender, RoutedEventArgs e)

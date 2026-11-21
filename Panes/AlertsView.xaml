@@ -78,6 +78,10 @@
                                 <Setter TargetName="icon" Property="Background" Value="#1AB06CFF" />
                                 <Setter TargetName="glyph" Property="Foreground" Value="{StaticResource PurpleBrush}" />
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding Kind}" Value="reminder">
+                                <Setter TargetName="icon" Property="Background" Value="#1AFF9F0A" />
+                                <Setter TargetName="glyph" Property="Foreground" Value="{StaticResource OrangeBrush}" />
+                            </DataTrigger>
                         </DataTemplate.Triggers>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

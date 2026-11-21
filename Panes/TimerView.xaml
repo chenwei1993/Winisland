@@ -91,7 +91,20 @@
                         <Button Grid.Column="1" Content="添加提醒" Style="{StaticResource PrimaryButton}"
                                 Margin="8,0,0,0" Click="ReminderAdd_Click" />
                     </Grid>
-                    <TextBlock x:Name="ReminderHint" Style="{StaticResource Caption}" Margin="2,5,0,0"
+
+                    <TextBlock Text="重复" Style="{StaticResource Caption}" Margin="2,10,0,0" />
+                    <WrapPanel Margin="0,5,0,0">
+                        <RadioButton x:Name="RepeatNone" Style="{StaticResource SegmentButton}" Content="不重复"
+                                     GroupName="ReminderRepeat" IsChecked="True" />
+                        <RadioButton x:Name="RepeatDaily" Style="{StaticResource SegmentButton}" Content="每天"
+                                     GroupName="ReminderRepeat" />
+                        <RadioButton x:Name="RepeatWeekdays" Style="{StaticResource SegmentButton}" Content="工作日"
+                                     GroupName="ReminderRepeat" />
+                        <RadioButton x:Name="RepeatWeekly" Style="{StaticResource SegmentButton}" Content="每周"
+                                     GroupName="ReminderRepeat" />
+                    </WrapPanel>
+
+                    <TextBlock x:Name="ReminderHint" Style="{StaticResource Caption}" Margin="2,7,0,0"
                                TextWrapping="Wrap"
                                Text="输入 HH:mm；今天已过的时间会自动安排到明天" />
 
@@ -119,7 +132,7 @@
                                         <StackPanel>
                                             <TextBlock Text="{Binding Title}" FontSize="12.5"
                                                        FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Text="{Binding TargetText}"
+                                            <TextBlock Text="{Binding ScheduleText}"
                                                        Style="{StaticResource Caption}" Margin="0,2,0,0" />
                                         </StackPanel>
                                         <TextBlock Grid.Column="1" Text="{Binding StatusText}"

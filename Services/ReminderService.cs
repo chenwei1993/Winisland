@@ -58,12 +58,13 @@ public sealed class ReminderService : ObservableObject, IDisposable
         CheckDue();
     }
 
-    public ReminderItem Add(DateTime target, string title)
+    public ReminderItem Add(DateTime target, string title, ReminderRepeat repeat = ReminderRepeat.None)
     {
         var item = new ReminderItem
         {
             Title = string.IsNullOrWhiteSpace(title) ? "提醒" : title.Trim(),
-            TargetTime = target
+            TargetTime = target,
+            Repeat = repeat
         };
 
         Reminders.Add(item);
@@ -73,15 +74,28 @@ public sealed class ReminderService : ObservableObject, IDisposable
         return item;
     }
 
-    public ReminderItem AddAfter(TimeSpan delay, string title) =>
-        Add(DateTime.Now + delay, title);
+    public ReminderItem AddAfter(TimeSpan delay, string title, ReminderRepeat repeat = ReminderRepeat.None) =>
+        Add(DateTime.Now + delay, title, repeat);
 
-    /// <summary>Cancels a pending reminder or clears a fired one from the list.</summary>
+    /// <summary>
+    /// Cancels a pending reminder. A fired repeating reminder is moved to its
+    /// next occurrence instead of being removed; a fired one-shot is removed.
+    /// </summary>
     public void Dismiss(Guid id)
     {
         var item = Reminders.FirstOrDefault(r => r.Id == id);
         if (item is null)
         {
+            return;
+        }
+
+        if (item.IsFired && item.Repeat != ReminderRepeat.None)
+        {
+            item.TargetTime = NextOccurrence(item.TargetTime, item.Repeat, DateTime.Now);
+            item.IsFired = false;
+            Sort();
+            Save();
+            Dismissed?.Invoke(id);
             return;
         }
 
@@ -93,6 +107,43 @@ public sealed class ReminderService : ObservableObject, IDisposable
         {
             Dismissed?.Invoke(id);
         }
+    }
+
+    internal static DateTime NextOccurrence(DateTime target, ReminderRepeat repeat, DateTime after)
+    {
+        if (target > after)
+        {
+            return target;
+        }
+
+        var time = target.TimeOfDay;
+        var date = target.Date;
+        var candidate = target;
+
+        do
+        {
+            date = repeat switch
+            {
+                ReminderRepeat.Weekdays => NextWeekday(date),
+                ReminderRepeat.Weekly => date.AddDays(7),
+                _ => date.AddDays(1)
+            };
+            candidate = date + time;
+        }
+        while (candidate <= after);
+
+        return candidate;
+    }
+
+    private static DateTime NextWeekday(DateTime date)
+    {
+        do
+        {
+            date = date.AddDays(1);
+        }
+        while (date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday);
+
+        return date;
     }
 
     private void CheckDue()

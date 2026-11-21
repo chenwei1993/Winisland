@@ -66,6 +66,7 @@ public partial class MainWindow : Window
     private Guid _stickyReminderId;
     private IslandAlert? _stickyAlert;
     private readonly Dictionary<Guid, IslandAlert> _reminderAlerts = new();
+    private Storyboard? _reminderAttention;
     private DateTime _mediaHoldUntil = DateTime.MinValue;
     private bool _lastMediaPlaying;
     private DateTime _lastAppSwitchShown = DateTime.MinValue;
@@ -1347,6 +1348,15 @@ public partial class MainWindow : Window
         CompactPlayButton.Visibility = activity.ShowMediaControls ? Visibility.Visible : Visibility.Collapsed;
         CompactDismissButton.Visibility = activity.ShowDismissButton ? Visibility.Visible : Visibility.Collapsed;
         CompactPlayButton.Content = activity.IsPlaying ? "\uE769" : "\uE768";
+
+        if (activity.ShowDismissButton)
+        {
+            StartReminderAttention();
+        }
+        else
+        {
+            StopReminderAttention();
+        }
     }
 
     private LiveActivity BuildMediaActivity(MediaSnapshot media)
@@ -1628,6 +1638,7 @@ public partial class MainWindow : Window
             _stickyActivity = null;
             _stickyAlert = null;
             _stickyReminderId = Guid.Empty;
+            StopReminderAttention();
             Present();
         }
 
@@ -1644,7 +1655,7 @@ public partial class MainWindow : Window
         var alert = new IslandAlert
         {
             Title = item.Title,
-            Message = $"计划时间 {item.TargetText}",
+            Message = $"计划时间 {item.ScheduleText}",
             App = "提醒",
             Kind = "reminder"
         };
@@ -1662,12 +1673,14 @@ public partial class MainWindow : Window
             return;
         }
 
+        StopReminderAttention();
+
         _stickyActivity = new LiveActivity
         {
             Kind = ActivityKind.Alert,
-            Glyph = "\uE823",
+            Glyph = "\uEA8F",
             Title = item.Title,
-            Subtitle = $"时间到了 · {item.TargetText}",
+            Subtitle = $"时间到了 · {item.ScheduleText}",
             ShowDismissButton = true,
             Accent = Orange
         };
@@ -1737,6 +1750,134 @@ public partial class MainWindow : Window
         {
             // Audio device unavailable.
         }
+    }
+
+    /// <summary>
+    /// Draws attention to a sticky reminder: a breathing orange rim, a ripple
+    /// around the bell and a repeating bell swing until it is dismissed.
+    /// </summary>
+    private void StartReminderAttention()
+    {
+        if (_reminderAttention is not null)
+        {
+            return;
+        }
+
+        var storyboard = new Storyboard();
+
+        var glow = new DoubleAnimation(0.12, 0.95, TimeSpan.FromSeconds(1.05))
+        {
+            AutoReverse = true,
+            RepeatBehavior = RepeatBehavior.Forever,
+            EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut }
+        };
+        Storyboard.SetTarget(glow, ReminderGlow);
+        Storyboard.SetTargetProperty(glow, new PropertyPath(nameof(UIElement.Opacity)));
+        storyboard.Children.Add(glow);
+
+        var rippleScale = new DoubleAnimation(1, 1.7, TimeSpan.FromSeconds(1.5))
+        {
+            RepeatBehavior = RepeatBehavior.Forever,
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+        };
+        Storyboard.SetTarget(rippleScale, CompactAlertRing);
+        Storyboard.SetTargetProperty(rippleScale,
+            new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleX)"));
+        storyboard.Children.Add(rippleScale);
+
+        var rippleScaleY = rippleScale.Clone();
+        Storyboard.SetTarget(rippleScaleY, CompactAlertRing);
+        Storyboard.SetTargetProperty(rippleScaleY,
+            new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleY)"));
+        storyboard.Children.Add(rippleScaleY);
+
+        var rippleFade = new DoubleAnimationUsingKeyFrames
+        {
+            Duration = TimeSpan.FromSeconds(1.5),
+            RepeatBehavior = RepeatBehavior.Forever
+        };
+        rippleFade.KeyFrames.Add(new LinearDoubleKeyFrame(0.9, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+        rippleFade.KeyFrames.Add(new LinearDoubleKeyFrame(0.35, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(0.55))));
+        rippleFade.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(1.1))));
+        rippleFade.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(1.5))));
+        Storyboard.SetTarget(rippleFade, CompactAlertRing);
+        Storyboard.SetTargetProperty(rippleFade, new PropertyPath(nameof(UIElement.Opacity)));
+        storyboard.Children.Add(rippleFade);
+
+        // Bell swings twice, then rests until the next round.
+        var swing = new DoubleAnimationUsingKeyFrames
+        {
+            Duration = TimeSpan.FromSeconds(3.6),
+            RepeatBehavior = RepeatBehavior.Forever
+        };
+        swing.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+        swing.KeyFrames.Add(new EasingDoubleKeyFrame(-18, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(110))));
+        swing.KeyFrames.Add(new EasingDoubleKeyFrame(15, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(250))));
+        swing.KeyFrames.Add(new EasingDoubleKeyFrame(-11, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(390))));
+        swing.KeyFrames.Add(new EasingDoubleKeyFrame(7, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(530))));
+        swing.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(700))));
+        swing.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(3.6))));
+        Storyboard.SetTarget(swing, CompactGlyph);
+        Storyboard.SetTargetProperty(swing,
+            new PropertyPath("(UIElement.RenderTransform).(RotateTransform.Angle)"));
+        storyboard.Children.Add(swing);
+
+        // Whole banner nudges left/right in step with the bell swing.
+        var nudge = new DoubleAnimationUsingKeyFrames
+        {
+            Duration = TimeSpan.FromSeconds(3.6),
+            RepeatBehavior = RepeatBehavior.Forever
+        };
+        nudge.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+        nudge.KeyFrames.Add(new EasingDoubleKeyFrame(-4, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(110))));
+        nudge.KeyFrames.Add(new EasingDoubleKeyFrame(4, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(250))));
+        nudge.KeyFrames.Add(new EasingDoubleKeyFrame(-2.5, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(390))));
+        nudge.KeyFrames.Add(new EasingDoubleKeyFrame(1.5, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(530))));
+        nudge.KeyFrames.Add(new EasingDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(700))));
+        nudge.KeyFrames.Add(new LinearDoubleKeyFrame(0, KeyTime.FromTimeSpan(TimeSpan.FromSeconds(3.6))));
+        Storyboard.SetTarget(nudge, CompactFace);
+        Storyboard.SetTargetProperty(nudge, new PropertyPath("(UIElement.RenderTransform).(TranslateTransform.X)"));
+        storyboard.Children.Add(nudge);
+
+        // One-shot pop as the reminder lands.
+        var pop = new DoubleAnimationUsingKeyFrames { Duration = TimeSpan.FromMilliseconds(520) };
+        pop.KeyFrames.Add(new EasingDoubleKeyFrame(0.62, KeyTime.FromTimeSpan(TimeSpan.Zero)));
+        pop.KeyFrames.Add(new EasingDoubleKeyFrame(1.16, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(200))));
+        pop.KeyFrames.Add(new EasingDoubleKeyFrame(0.97, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(330))));
+        pop.KeyFrames.Add(new EasingDoubleKeyFrame(1, KeyTime.FromTimeSpan(TimeSpan.FromMilliseconds(520))));
+        Storyboard.SetTarget(pop, CompactIconHost);
+        Storyboard.SetTargetProperty(pop,
+            new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleX)"));
+        storyboard.Children.Add(pop);
+
+        var popY = pop.Clone();
+        Storyboard.SetTarget(popY, CompactIconHost);
+        Storyboard.SetTargetProperty(popY,
+            new PropertyPath("(UIElement.RenderTransform).(ScaleTransform.ScaleY)"));
+        storyboard.Children.Add(popY);
+
+        _reminderAttention = storyboard;
+        storyboard.Begin(this, true);
+    }
+
+    private void StopReminderAttention()
+    {
+        if (_reminderAttention is null)
+        {
+            return;
+        }
+
+        _reminderAttention.Stop(this);
+        _reminderAttention = null;
+
+        ReminderGlow.Opacity = 0;
+        CompactAlertRing.Opacity = 0;
+        CompactAlertRingScale.ScaleX = 1;
+        CompactAlertRingScale.ScaleY = 1;
+        CompactGlyphTilt.Angle = 0;
+        CompactIconScale.ScaleX = 1;
+        CompactIconScale.ScaleY = 1;
+        CompactNudge.X = 0;
     }
 
     /// <summary>Re-reserves idle width after the usage chip display mode changes.</summary>
@@ -2486,6 +2627,7 @@ public partial class MainWindow : Window
         "warning" => Orange,
         "error" => Red,
         "timer" => (Brush)FindResource("PurpleBrush"),
+        "reminder" => Orange,
         _ => Accent
     };
 

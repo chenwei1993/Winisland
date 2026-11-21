@@ -233,7 +233,7 @@ public sealed class IslandAlert
         "warning" => "\uE7BA",
         "error" => "\uE783",
         "timer" => "\uE823",
-        "reminder" => "\uE823",
+        "reminder" => "\uEA8F",
         "system" => "\uEA8F",
         _ => "\uE946"
     };
@@ -243,6 +243,14 @@ public sealed class IslandAlert
     public string Tooltip => $"{Title}\n{Message}";
 }
 
+public enum ReminderRepeat
+{
+    None,
+    Daily,
+    Weekdays,
+    Weekly
+}
+
 /// <summary>A scheduled reminder that stays on the island until dismissed.</summary>
 public sealed class ReminderItem : ObservableObject
 {
@@ -250,7 +258,35 @@ public sealed class ReminderItem : ObservableObject
 
     public string Title { get; set; } = "提醒";
 
-    public DateTime TargetTime { get; set; }
+    private DateTime _targetTime;
+
+    public DateTime TargetTime
+    {
+        get => _targetTime;
+        set
+        {
+            if (Set(ref _targetTime, value))
+            {
+                OnPropertyChanged(nameof(TargetText));
+                OnPropertyChanged(nameof(ScheduleText));
+            }
+        }
+    }
+
+    private ReminderRepeat _repeat;
+
+    public ReminderRepeat Repeat
+    {
+        get => _repeat;
+        set
+        {
+            if (Set(ref _repeat, value))
+            {
+                OnPropertyChanged(nameof(RepeatText));
+                OnPropertyChanged(nameof(ScheduleText));
+            }
+        }
+    }
 
     private bool _isFired;
 
@@ -287,6 +323,20 @@ public sealed class ReminderItem : ObservableObject
             return $"{TargetTime:M月d日 HH:mm}";
         }
     }
+
+    [JsonIgnore]
+    public string RepeatText => Repeat switch
+    {
+        ReminderRepeat.Daily => "每天",
+        ReminderRepeat.Weekdays => "工作日",
+        ReminderRepeat.Weekly => "每周",
+        _ => string.Empty
+    };
+
+    [JsonIgnore]
+    public string ScheduleText => string.IsNullOrEmpty(RepeatText)
+        ? TargetText
+        : $"{TargetText} · {RepeatText}";
 
     [JsonIgnore]
     public string StatusText => IsFired ? "已提醒" : "等待中";
