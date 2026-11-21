@@ -172,6 +172,42 @@
                         Click="OpenData_Click" />
             </StackPanel>
 
+            <TextBlock Text="更新" Style="{StaticResource PaneTitle}" FontSize="14.5" Margin="2,16,0,7" />
+
+            <Border x:Name="UpdateCard" Style="{StaticResource Card}" Padding="12,10" Margin="0,0,0,6">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock x:Name="UpdateTitle" Text="版本更新" FontSize="13" />
+                        <TextBlock x:Name="UpdateStatus" Style="{StaticResource Caption}" Margin="0,2,0,0"
+                                   TextWrapping="Wrap" HorizontalAlignment="Left" />
+                        <TextBlock x:Name="UpdatePageLink" Text="打开发布页" FontSize="11.5" Margin="0,4,0,0"
+                                   Foreground="{StaticResource AccentBrush}" Cursor="Hand"
+                                   MouseLeftButtonUp="UpdatePage_Click" />
+                        <ProgressBar x:Name="UpdateBar" Style="{StaticResource HudProgress}" Height="2.5"
+                                     Maximum="100" Margin="0,7,14,1" Visibility="Collapsed" />
+                    </StackPanel>
+                    <Button x:Name="UpdateActionButton" Grid.Column="1" Content="检查更新" Width="96" Height="30"
+                            Style="{StaticResource GhostButton}" Padding="10,4" Margin="10,0,0,0"
+                            VerticalAlignment="Center" Click="UpdateAction_Click" />
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Padding="12,9" Margin="0,0,0,6">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="自动检查更新" FontSize="13" />
+                        <TextBlock Text="启动时和每 6 小时检查一次 GitHub Releases" Style="{StaticResource Caption}"
+                                   Margin="0,2,0,0" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource Switch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding AutoCheckUpdates, Mode=TwoWay}" />
+                </Grid>
+            </Border>
+
             <TextBlock Text="关于" Style="{StaticResource PaneTitle}" FontSize="14.5" Margin="2,16,0,7" />
             <Border Style="{StaticResource Card}" Padding="12,10" Margin="0,0,0,6">
                 <Grid>

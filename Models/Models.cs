@@ -563,7 +563,8 @@ public enum ActivityKind
     Clipboard,
     Alert,
     App,
-    Info
+    Info,
+    Update
 }
 
 /// <summary>Everything the compact island can display.</summary>

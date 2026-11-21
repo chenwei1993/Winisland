@@ -1,13 +1,19 @@
 (() => {
     const repo = "chenwei1993/Winisland";
-    const fallbackVersion = "1.3.1";
+    const fallbackVersion = "1.3.2";
 
     // ── Latest release ────────────────────────────────────────────────
     const versionHero = document.getElementById("version-hero");
     const versionMain = document.getElementById("version-main");
     const downloadHero = document.getElementById("download-hero");
     const downloadMain = document.getElementById("download-main");
+    const downloadMirror = document.getElementById("download-mirror");
+    const downloadMirrorMain = document.getElementById("download-mirror-main");
     const downloadSize = document.getElementById("download-size");
+
+    function mirrorUrl(url) {
+        return /^https:\/\/github\.com\//i.test(url) ? `https://gh-proxy.com/${url}` : url;
+    }
 
     async function loadLatestRelease() {
         try {
@@ -28,6 +34,9 @@
             if (url) {
                 if (downloadHero) downloadHero.href = url;
                 if (downloadMain) downloadMain.href = url;
+                const mirrored = mirrorUrl(url);
+                if (downloadMirror) downloadMirror.href = mirrored;
+                if (downloadMirrorMain) downloadMirrorMain.href = mirrored;
             }
 
             if (exe?.size && downloadSize) {

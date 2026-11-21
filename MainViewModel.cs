@@ -849,6 +849,23 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    public bool AutoCheckUpdates
+    {
+        get => _s.Settings.Current.AutoCheckUpdates;
+        set
+        {
+            if (_s.Settings.Current.AutoCheckUpdates == value)
+            {
+                return;
+            }
+
+            _s.Settings.Current.AutoCheckUpdates = value;
+            _s.Settings.Save();
+            _s.Update.ApplyAutoCheckSetting();
+            OnPropertyChanged();
+        }
+    }
+
     public bool EdgeAutoHide
     {
         get => _s.Settings.Current.EdgeAutoHide;

@@ -143,6 +143,7 @@ public partial class MainWindow : Window
         _s.Usage.PropertyChanged += OnUsagePropertyChanged;
         _s.Reminders.Due += OnReminderDue;
         _s.Reminders.Dismissed += OnReminderDismissed;
+        _s.Update.UpdateAvailable += OnUpdateAvailable;
         _s.SystemNotifications.Received += OnSystemNotification;
 
         _presentTimer.Tick += (_, _) => OnPresentTimer();
@@ -257,6 +258,7 @@ public partial class MainWindow : Window
         _s.Usage.PropertyChanged -= OnUsagePropertyChanged;
         _s.Reminders.Due -= OnReminderDue;
         _s.Reminders.Dismissed -= OnReminderDismissed;
+        _s.Update.UpdateAvailable -= OnUpdateAvailable;
         _s.SystemNotifications.Received -= OnSystemNotification;
 
         Vm.Dispose();
@@ -2146,7 +2148,7 @@ public partial class MainWindow : Window
 
     // Alerts
     public IslandAlert PushAlert(string title, string message, string app = "WinIsland", string kind = "info",
-        double bannerSeconds = 5, ImageSource? icon = null)
+        double bannerSeconds = 5, ImageSource? icon = null, LiveActivity? activity = null)
     {
         var alert = new IslandAlert
         {
@@ -2171,8 +2173,29 @@ public partial class MainWindow : Window
             }
         }
 
-        ShowTransient(BuildAlertActivity(alert), bannerSeconds);
+        ShowTransient(activity ?? BuildAlertActivity(alert), bannerSeconds);
         return alert;
+    }
+
+    private void OnUpdateAvailable(UpdateInfo info)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(new Action(() => OnUpdateAvailable(info)));
+            return;
+        }
+
+        var notice = new LiveActivity
+        {
+            Kind = ActivityKind.Update,
+            Glyph = "\uE72C",
+            Title = $"发现新版本 {info.Tag}",
+            Subtitle = "点击查看并更新",
+            Accent = Green
+        };
+
+        PushAlert($"发现新版本 {info.Tag}", "打开设置即可下载并重启更新。", "更新", "info",
+            8, null, notice);
     }
 
     // Pane selection
@@ -2300,6 +2323,14 @@ public partial class MainWindow : Window
 
         if (IsInteractiveSource(e.OriginalSource as DependencyObject))
         {
+            return;
+        }
+
+        if (_transient is not null && _transient.Kind == ActivityKind.Update &&
+            DateTime.Now < _transientUntil)
+        {
+            Expand(8);
+            e.Handled = true;
             return;
         }
 

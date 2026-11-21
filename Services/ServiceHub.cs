@@ -21,6 +21,7 @@ public sealed class ServiceHub : IDisposable
     public NotificationPipeServer Pipes { get; }
     public UsageService Usage { get; }
     public ReminderService Reminders { get; }
+    public UpdateService Update { get; }
 
     public ServiceHub()
     {
@@ -45,6 +46,7 @@ public sealed class ServiceHub : IDisposable
         Pipes = new NotificationPipeServer();
         Usage = new UsageService(Settings);
         Reminders = new ReminderService(Settings.DataDirectory);
+        Update = new UpdateService(Settings);
     }
 
     public void Start()
@@ -66,10 +68,12 @@ public sealed class ServiceHub : IDisposable
         Buds.Start();
         Usage.Start();
         Reminders.Start();
+        Update.Start();
     }
 
     public void Dispose()
     {
+        Update.Dispose();
         Reminders.Dispose();
         Usage.Dispose();
         Pipes.Dispose();

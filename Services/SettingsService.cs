@@ -20,6 +20,7 @@ public sealed class AppSettings
     public bool StartWithWindows { get; set; }
     public bool PlaySound { get; set; }
     public bool ShowSystemNotifications { get; set; } = true;
+    public bool AutoCheckUpdates { get; set; } = true;
     public bool EdgeAutoHide { get; set; }
     public bool SmartAvoidWindows { get; set; }
     public bool ShowAppSwitches { get; set; }
