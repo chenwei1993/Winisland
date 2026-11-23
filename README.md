@@ -7,21 +7,40 @@
   <img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4?style=flat-square" alt="支持 Windows 10 和 Windows 11">
 </p>
 
-一款为 Windows 10/11 打造的「灵动岛」（Dynamic Island / 顶部刘海）桌面小组件：悬浮在屏幕顶部中央，把媒体、计时器、系统状态、剪贴板、文件与通知都收进一颗黑色药丸里。
+一款为 Windows 10/11 打造的「灵动岛」（Dynamic Island / 顶部刘海）桌面小组件：悬浮在屏幕顶部中央，把蓝牙耳机控制、媒体、计时器、系统状态、剪贴板、文件与通知都收进一颗黑色药丸里。
 
-**WinIsland** is a **Dynamic Island for Windows 10/11**, built with WPF and .NET. It brings media controls, Bluetooth earbuds, AI usage (DeepSeek / OpenCode Go / OpenDesign), system monitor, clipboard history, file shelf and notifications into one lightweight top-of-screen notch.
+**WinIsland 能让 Windows 像手机一样管理蓝牙耳机**：OPPO / OnePlus / realme、华为、荣耀、小米 / Redmi、vivo / iQOO、索尼、漫步者、森海塞尔、三星、Google、Bose、Nothing、水月雨、AKG、EarFun 共 15 个品牌协议、300+ 型号，支持左右耳与充电盒电量、降噪 / 通透 / 自适应、EQ、空间音频、游戏模式、双设备、佩戴检测、查找耳机与贴合度检测。
+
+**WinIsland** is a **Dynamic Island for Windows 10/11**, built with WPF and .NET. It controls **multi-brand Bluetooth earbuds** (battery, ANC, EQ, spatial audio, game mode, dual device) and brings media controls, AI usage (DeepSeek / OpenCode Go / OpenDesign), system monitor, clipboard history, file shelf and notifications into one lightweight top-of-screen notch.
 
 > 在线主页与截图：[chenwei1993.github.io/Winisland](https://chenwei1993.github.io/Winisland/)
 
-> 关键词 / Keywords：Windows 灵动岛、Windows 11 刘海、Dynamic Island for Windows、WPF 桌面组件、蓝牙耳机控制、AI 用量监控、DeepSeek 余额、OpenCode Go 额度、OpenDesign 额度、剪贴板管理、系统监控。Windows desktop widget, Bluetooth earbuds, AI usage monitor, clipboard manager, system monitor.
+> 关键词 / Keywords：Windows 蓝牙耳机控制、Windows 耳机降噪、电脑控制蓝牙耳机、OPPO 耳机电脑、小米耳机电脑、漫步者耳机电脑、蓝牙耳机电量、耳机 EQ、空间音频、Windows 灵动岛、Windows 11 刘海、Dynamic Island for Windows、WPF 桌面组件、AI 用量监控、DeepSeek 余额、剪贴板管理、系统监控。Bluetooth earbuds control on Windows, earbuds ANC on PC, Windows desktop widget, AI usage monitor.
 
 ![WinIsland 灵动岛主界面](image.png)
 ![WinIsland Windows 灵动岛预览](docs/preview.png)
+
+<p align="center">
+  <img src="docs/assets/shot-earbuds.png" alt="WinIsland 在 Windows 上控制蓝牙耳机：OPPO Enco Air4 电量、EQ、空间音效、游戏模式与查找耳机" width="620" />
+</p>
 
 <p align="center"><img src="docs/compact.png" alt="WinIsland 紧凑形态：媒体播放与电量" /></p>
 <p align="center"><img src="docs/app-switch.png" alt="WinIsland 应用切换上岛提示" /></p>
 
 ## 功能
+
+**蓝牙耳机（重点）**
+
+- 15 个品牌协议、300+ 型号：OPPO / OnePlus / realme、华为、荣耀、小米 / Redmi、vivo / iQOO、索尼、漫步者 EDIFIER、森海塞尔、三星、Google Pixel Buds、Bose、Nothing、水月雨、AKG、EarFun；另识别雷蛇、罗技、HyperX、SteelSeries、雷柏、达尔优、迈从、JBL 等 USB / 2.4G 游戏耳机
+- 三段电量：左耳、右耳、充电盒分别显示百分比与进度条，开盖 / 取出 / 放回实时刷新
+- 降噪控制：关闭 / 降噪 / 通透 / 自适应按型号显示，部分型号支持降噪等级与环境声级别
+- EQ 与空间音频：读取耳机自带预设并直接切换；固定空间音频与头部跟踪单独给出开关
+- 游戏模式：一键降低蓝牙音频延迟，悬停可看到对续航与稳定性的说明
+- 双设备与佩戴检测：同时连接电脑和手机，摘下暂停、戴上继续（取决于型号）
+- 查找耳机与贴合度检测：让耳机响铃找位置，检测哪只耳塞没戴紧
+- 品牌高级设置：耳机上报的自动关机、触控按键分配、提示音语言等自动生成为列表 / 滑杆
+- 多设备切换：在耳机卡片里选择已配对的其他品牌耳机，自动切换当前控制设备
+- 连接 / 断开时自动上岛提示，不需要打开系统蓝牙面板
 
 **岛上常驻**
 
@@ -36,9 +55,7 @@
 - 定时提醒：设置目标时间或快捷 5/15/30/60 分钟；支持每天 / 工作日 / 每周重复。到点后常驻岛上，带橙色脉冲光晕、铃声摆动和轻微晃动来强提醒，点击「关闭提醒」才会消失；重复提醒关闭后会自动排到下一次，重启后仍会补提醒
 - 音量、亮度实时 HUD（系统音量变化、DDC/CI 显示器亮度变化都会触发）
 - 系统页可直接切换扬声器 / 耳机 / HDMI 等播放设备，默认设备变化时自动刷新
-- 多品牌蓝牙耳机：OPPO / OnePlus / realme、华为、荣耀、小米 / Redmi、vivo / iQOO、索尼、漫步者、森海塞尔、三星、Google、Bose、Nothing 等；显示连接状态、电量、降噪、EQ、空间音效与型号支持的开关
-- 多设备切换：在耳机卡片里选择已配对的不同品牌耳机，自动切换当前控制设备
-- 品牌高级设置：耳机上报的自动关机、触控按键分配、环境声级别等选项自动生成列表 / 滑杆；支持查找耳机（响铃）与贴合度检测
+- 多品牌蓝牙耳机：见上方「蓝牙耳机」一节；系统页里显示连接状态、电量、降噪、EQ、空间音效与型号支持的开关
 - AI 用量上岛：按平台顺序显示第一个有数据的平台；DeepSeek 余额 / 今日消耗、OpenCode Go 的 5 小时 / 每周 / 每月额度、OpenDesign 的 5 小时 / 每周额度与钱包；阈值提醒，可常驻小徽标
 - 字体大小：设置里可选小 / 中 / 大，岛上与展开面板即时生效
 - 自动更新：启动时和每 6 小时检查 GitHub Releases，发现新版本会提示，设置里可一键下载并重启安装；国内网络会自动测速并选择最快的加速镜像，支持断点续传，下载后校验文件版本

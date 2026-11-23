@@ -53,15 +53,20 @@
 
     // ── Screenshot tabs ───────────────────────────────────────────────
     const shots = {
-        usage: {
-            src: "assets/shot-usage.png",
-            alt: "WinIsland 的 AI 用量面板",
-            caption: "按平台顺序展示额度，接近上限时自动提醒。"
+        earbuds: {
+            src: "assets/shot-earbuds.png",
+            alt: "WinIsland 的蓝牙耳机控制面板",
+            caption: "电量、降噪、EQ、空间音频与查找耳机，都在这一页。"
         },
         system: {
             src: "assets/shot-system.png",
             alt: "WinIsland 的系统状态、音量和耳机控制面板",
             caption: "CPU、内存、网络、音量、亮度与耳机控制，一页看完。"
+        },
+        usage: {
+            src: "assets/shot-usage.png",
+            alt: "WinIsland 的 AI 用量面板",
+            caption: "按平台顺序展示额度，接近上限时自动提醒。"
         },
         calendar: {
             src: "assets/shot-calendar.png",

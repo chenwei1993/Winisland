@@ -3,30 +3,30 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>WinIsland · Windows 灵动岛 / Dynamic Island for Windows</title>
-    <meta name="description" content="WinIsland 是一个为 Windows 10/11 打造的灵动岛（Dynamic Island / 顶部刘海）：媒体控制、多品牌蓝牙耳机、DeepSeek / OpenCode Go / OpenDesign AI 用量、系统监控、剪贴板与通知。免安装单文件，开源免费。">
-    <meta name="keywords" content="Windows 灵动岛, Windows 11 刘海, Dynamic Island for Windows, Windows Dynamic Island, WPF desktop widget, 蓝牙耳机, AI 用量, DeepSeek, OpenCode Go, OpenDesign, 剪贴板管理, 系统监控">
+    <title>WinIsland · 在 Windows 上控制蓝牙耳机：电量 / 降噪 / EQ / 空间音频</title>
+    <meta name="description" content="WinIsland 让 Windows 也能像手机一样控制蓝牙耳机：15 个品牌协议、300+ 型号，支持左右耳与充电盒三段电量、降噪 / 通透 / 自适应、EQ、空间音频、游戏模式、双设备、佩戴检测、查找耳机、贴合度检测。同时支持媒体控制、AI 用量、系统监控与通知，免安装单文件。">
+    <meta name="keywords" content="Windows 蓝牙耳机控制, Windows 耳机降噪, 电脑控制蓝牙耳机, Windows 11 耳机, OPPO 耳机 电脑, 小米耳机 电脑, 华为耳机 电脑, 索尼耳机 电脑, 漫步者耳机 电脑, 蓝牙耳机电量, 耳机 EQ, 空间音频, Windows 灵动岛, Dynamic Island for Windows, WPF desktop widget, AI 用量, DeepSeek">
     <link rel="canonical" href="https://chenwei1993.github.io/Winisland/">
     <meta name="theme-color" content="#0a0a0d">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="WinIsland">
     <meta property="og:url" content="https://chenwei1993.github.io/Winisland/">
-    <meta property="og:title" content="WinIsland · Windows 灵动岛 / Dynamic Island for Windows">
-    <meta property="og:description" content="媒体、耳机、AI 用量、系统状态与通知，全都收进 Windows 顶部的一个小岛。">
-    <meta property="og:image" content="https://chenwei1993.github.io/Winisland/assets/shot-usage.png">
+    <meta property="og:title" content="WinIsland · 在 Windows 上控制蓝牙耳机">
+    <meta property="og:description" content="15 个品牌协议、300+ 型号：三段电量、降噪 / 通透、EQ、空间音频、游戏模式与双设备，全都放进 Windows 顶部的一个小岛。">
+    <meta property="og:image" content="https://chenwei1993.github.io/Winisland/assets/shot-earbuds.png">
     <meta property="og:locale" content="zh_CN">
     <meta property="og:locale:alternate" content="en_US">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="WinIsland · Dynamic Island for Windows">
-    <meta name="twitter:description" content="A Dynamic Island for Windows 10/11: media, Bluetooth earbuds, AI usage, system monitor, clipboard and notifications.">
-    <meta name="twitter:image" content="https://chenwei1993.github.io/Winisland/assets/shot-usage.png">
+    <meta name="twitter:title" content="WinIsland · Control Bluetooth earbuds on Windows">
+    <meta name="twitter:description" content="Battery, ANC, transparency, EQ, spatial audio and game mode for 15 earbud brands and 300+ models, in a Dynamic Island for Windows 10/11.">
+    <meta name="twitter:image" content="https://chenwei1993.github.io/Winisland/assets/shot-earbuds.png">
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "WinIsland",
         "alternateName": ["Windows 灵动岛", "Dynamic Island for Windows"],
-        "description": "A Dynamic Island for Windows 10/11 with media controls, Bluetooth earbuds, AI usage, system monitor, clipboard history and notifications.",
+        "description": "A Dynamic Island for Windows 10/11 with multi-brand Bluetooth earbuds control (battery, ANC, transparency, EQ, spatial audio, game mode, dual device), media controls, AI usage, system monitor, clipboard and notifications.",
         "operatingSystem": "Windows 10, Windows 11",
         "applicationCategory": "UtilitiesApplication",
         "applicationSubCategory": "Desktop Enhancement",
@@ -35,9 +35,9 @@
         "installUrl": "https://github.com/chenwei1993/Winisland/releases/latest",
         "codeRepository": "https://github.com/chenwei1993/Winisland",
         "license": "https://www.gnu.org/licenses/gpl-3.0.html",
-        "screenshot": "https://chenwei1993.github.io/Winisland/assets/shot-usage.png",
+        "screenshot": "https://chenwei1993.github.io/Winisland/assets/shot-earbuds.png",
         "sameAs": ["https://github.com/chenwei1993/Winisland"],
-        "keywords": "Windows Dynamic Island, Windows 11 notch, WPF desktop widget, Bluetooth earbuds, AI usage monitor, DeepSeek, OpenCode Go, OpenDesign, clipboard manager, system monitor",
+        "keywords": "Bluetooth earbuds control on Windows, earbuds ANC on PC, Windows Dynamic Island, WPF desktop widget, OPPO earbuds, Xiaomi earbuds, Huawei earbuds, Sony earbuds, Edifier, AI usage monitor, clipboard manager",
         "offers": {
             "@type": "Offer",
             "price": "0",
@@ -68,6 +68,7 @@
             <span>WinIsland</span>
         </a>
         <nav class="nav-links" aria-label="主导航">
+            <a href="#earbuds">耳机</a>
             <a href="#features">功能</a>
             <a href="#screens">截图</a>
             <a href="#download">下载</a>
@@ -88,60 +89,148 @@
 <main>
     <section class="hero">
         <div class="hero-copy">
-            <span class="eyebrow"><i></i>Windows 10 / 11 · Dynamic Island · 免安装单文件</span>
-            <h1>把灵动岛<br><span class="gradient">带到 Windows</span></h1>
+            <span class="eyebrow"><i></i>Windows 10 / 11 · 多品牌蓝牙耳机 · 免安装单文件</span>
+            <h1>耳机上的开关<br><span class="gradient">电脑上也能点</span></h1>
             <p class="lead">
-                媒体、耳机、AI 用量、系统状态、剪贴板与通知，全部收进屏幕顶部的一个小岛。
-                不挡视线，不占桌面，需要的时候一眼就能看到。
+                系统只会告诉你耳机“已连接”。电量、降噪 / 通透、EQ、空间音频、游戏模式、双设备、查找耳机——
+                以前只有手机 App 能做的事，现在在电脑顶部的小岛里就能完成。
             </p>
             <p class="lead lead-en" lang="en">
-                A Dynamic Island for Windows 10/11 — media controls, Bluetooth earbuds, AI usage,
-                system monitor, clipboard and notifications in one top-of-screen notch.
+                Battery, ANC, transparency, EQ, spatial audio and game mode for your Bluetooth earbuds —
+                right on Windows, across 15 brand protocols and 300+ models.
             </p>
             <div class="cta-row">
                 <a class="button primary" id="download-hero" href="https://github.com/chenwei1993/Winisland/releases/download/v1.3.2/WinIsland.exe">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14"/></svg>
                     下载 WinIsland <span class="version" id="version-hero">1.3.2</span>
                 </a>
-                <a class="button ghost" href="https://github.com/chenwei1993/Winisland" target="_blank" rel="noopener">
-                    查看源码
+                <a class="button ghost" href="#earbuds">
+                    看看支持哪些耳机
                 </a>
             </div>
             <ul class="meta-row">
                 <li>无需安装 .NET</li>
-                <li>GPL-3.0 开源</li>
-                <li>本地运行，无遥测</li>
+                <li>不装官方客户端也能用</li>
+                <li>GPL-3.0 开源 · 无遥测</li>
             </ul>
             <p class="small-note">GitHub 下载慢？<a id="download-mirror" href="https://gh-proxy.com/https://github.com/chenwei1993/Winisland/releases/download/v1.3.2/WinIsland.exe" target="_blank" rel="noopener">使用国内加速镜像下载</a>（第三方代理，会校验文件大小与版本）</p>
         </div>
 
         <div class="hero-visual">
             <div class="hero-glow" aria-hidden="true"></div>
-            <img class="idle-pill" src="assets/shot-idle.png" alt="WinIsland Windows 灵动岛空闲状态：时间、日期、耳机电量与 AI 用量" width="492" height="52">
+            <img class="idle-pill" src="assets/shot-idle.png" alt="WinIsland 顶部小岛空闲状态：时间、日期、耳机电量与 AI 用量" width="492" height="52">
             <div class="shot-frame hero-frame">
-                <img class="shot" src="assets/shot-usage.png" alt="WinIsland Windows 灵动岛 AI 用量面板" width="680" height="590">
+                <img class="shot" src="assets/shot-earbuds.png" alt="WinIsland 在 Windows 上控制 OPPO 蓝牙耳机：左右耳与充电盒电量、音效 EQ、空间音效、游戏模式、双设备、查找耳机" width="680" height="504">
             </div>
             <div class="float-pill pill-a">
-                <span class="dot green"></span> 耳机已连接
+                <span class="dot green"></span> 左 100% · 右 100% · 盒 0%
             </div>
             <div class="float-pill pill-b">
-                <span class="spark">✦</span> 3 个 AI 平台
+                <span class="spark">◉</span> 降噪 / 通透 一键切
             </div>
         </div>
     </section>
 
     <section class="stats" aria-label="概览">
-        <div><strong>9</strong><span>个功能面板</span></div>
-        <div><strong>12+</strong><span>耳机品牌</span></div>
-        <div><strong>3</strong><span>AI 用量平台</span></div>
-        <div><strong>0</strong><span>遥测与账号</span></div>
+        <div><strong>15</strong><span>品牌协议</span></div>
+        <div><strong>300+</strong><span>耳机型号</span></div>
+        <div><strong>10+</strong><span>项耳机能力</span></div>
+        <div><strong>1</strong><span>个 exe，免安装</span></div>
+    </section>
+
+    <section class="section" id="earbuds">
+        <div class="section-head section-head-wide">
+            <span class="eyebrow"><i></i>EARBUDS ON WINDOWS</span>
+            <h2>耳机不再只是<br class="mobile-break">“已连接”</h2>
+            <p>
+                不是只显示一个“已连接”。WinIsland 会打开各品牌的私有控制通道，
+                读取耳机上报的真实状态，并把手机 App 里的开关做成 Windows 上的原生控件。
+            </p>
+        </div>
+
+        <div class="brand-band" aria-label="支持的耳机品牌">
+            <span class="brand-chip strong">OPPO</span>
+            <span class="brand-chip strong">OnePlus</span>
+            <span class="brand-chip strong">realme</span>
+            <span class="brand-chip strong">华为</span>
+            <span class="brand-chip strong">荣耀</span>
+            <span class="brand-chip strong">小米 / Redmi</span>
+            <span class="brand-chip strong">vivo / iQOO</span>
+            <span class="brand-chip">索尼</span>
+            <span class="brand-chip">漫步者 EDIFIER</span>
+            <span class="brand-chip">森海塞尔</span>
+            <span class="brand-chip">三星</span>
+            <span class="brand-chip">Google Pixel Buds</span>
+            <span class="brand-chip">Bose</span>
+            <span class="brand-chip">Nothing</span>
+            <span class="brand-chip">水月雨</span>
+            <span class="brand-chip">AKG</span>
+            <span class="brand-chip">EarFun</span>
+            <span class="brand-chip muted">雷蛇 / 罗技 / HyperX 等 USB 耳机</span>
+        </div>
+
+        <div class="earbuds-grid">
+            <div class="earbuds-showcase">
+                <div class="shot-frame">
+                    <img class="shot" src="assets/card-earbuds.png" alt="耳机卡片：OPPO Enco Air4 左右耳与充电盒电量、音效 EQ 预设、空间音效、游戏模式、双设备、查找耳机按钮" width="478" height="251" loading="lazy">
+                </div>
+                <div class="badge-row">
+                    <span class="badge"><b>左 / 右 / 充电盒</b> 三段电量</span>
+                    <span class="badge"><b>EQ</b> 纯原音 / 悠扬人声 / 脉冲低音…</span>
+                    <span class="badge"><b>空间音效</b> 固定 / 头部跟踪</span>
+                </div>
+            </div>
+
+            <div class="cap-grid">
+                <article class="cap">
+                    <h3>降噪 / 通透 / 自适应</h3>
+                    <p>按型号显示实际支持的档位：关闭、降噪、通透、自适应；部分型号还能调降噪等级与环境声级别。</p>
+                </article>
+                <article class="cap">
+                    <h3>三段电量与充电状态</h3>
+                    <p>左耳、右耳、充电盒分别显示百分比和进度条，开盖、取出、放回都会实时刷新。</p>
+                </article>
+                <article class="cap">
+                    <h3>EQ 与空间音频</h3>
+                    <p>读取耳机自带的音效预设并直接切换；支持固定空间音频与头部跟踪的型号会单独给出开关。</p>
+                </article>
+                <article class="cap">
+                    <h3>游戏模式 / 低延迟</h3>
+                    <p>一键降低蓝牙音频延迟，打游戏、看直播时口型对得上；鼠标悬停就能看到它对续航和稳定性的影响。</p>
+                </article>
+                <article class="cap">
+                    <h3>双设备与佩戴检测</h3>
+                    <p>同时连接电脑和手机，摘下暂停、戴上继续，取决于型号是否上报这些能力。</p>
+                </article>
+                <article class="cap">
+                    <h3>查找耳机与贴合度检测</h3>
+                    <p>让耳机响铃找位置；入耳贴合度检测会告诉你哪只耳塞没戴紧，避免降噪效果打折。</p>
+                </article>
+                <article class="cap">
+                    <h3>品牌高级设置</h3>
+                    <p>耳机自己上报的自动关机、触控按键分配、提示音语言等选项，会自动生成为列表或滑杆，不用猜命令。</p>
+                </article>
+                <article class="cap">
+                    <h3>多耳机快速切换</h3>
+                    <p>电脑上配对过多副耳机时，在卡片里直接选另一副，自动切换当前控制设备，不用进系统设置翻蓝牙列表。</p>
+                </article>
+            </div>
+        </div>
+
+        <div class="note-strip">
+            <p>
+                <b>怎么做到的？</b>通过各品牌耳机自己的 RFCOMM / GATT 控制通道通信，也就是手机 App 用的那套协议；
+                不需要安装官方客户端，也不会上传任何耳机数据。少数品牌同一时间只允许一个控制端接入，
+                这时关掉官方 App 或 EncoDeck 即可。
+            </p>
+        </div>
     </section>
 
     <section class="section" id="features">
         <div class="section-head">
-            <span class="eyebrow"><i></i>FEATURES</span>
-            <h2>不只是好看，<br class="mobile-break">而是每天都会用</h2>
-            <p>把 Windows 上零散的小操作，收进一个随时可用的顶部小岛。</p>
+            <span class="eyebrow"><i></i>ALSO INSIDE</span>
+            <h2>耳机之外，<br class="mobile-break">它还是你的顶部小岛</h2>
+            <p>耳机卡片只是系统页的一部分。同一个岛上还有这些每天都会用到的东西。</p>
         </div>
         <div class="feature-grid">
             <article class="card feature">
@@ -150,13 +239,6 @@
                 </div>
                 <h3>正在播放</h3>
                 <p>封面、曲目、进度条与播放控制。紧凑态也能拖动进度，支持所有使用 Windows SMTC 的播放器。</p>
-            </article>
-            <article class="card feature">
-                <div class="icon green">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-3a8 8 0 0 1 16 0v3"/><rect x="2" y="13" width="4" height="7" rx="2"/><rect x="18" y="13" width="4" height="7" rx="2"/></svg>
-                </div>
-                <h3>多品牌耳机</h3>
-                <p>OPPO、华为、小米、vivo、索尼、漫步者等 12+ 品牌。电量、降噪、EQ、空间音效、查找耳机与贴合度检测。</p>
             </article>
             <article class="card feature">
                 <div class="icon purple">
@@ -180,6 +262,13 @@
                 <p>最近 30 条文本 / 文件、4 张图片一键回填。拖入文件自动展开，松手加入文件架，重启后保留。</p>
             </article>
             <article class="card feature">
+                <div class="icon green">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>
+                </div>
+                <h3>定时提醒</h3>
+                <p>支持每天 / 工作日 / 每周重复。到点常驻岛上，橙色脉冲光晕加铃声摆动，点击「关闭提醒」才消失。</p>
+            </article>
+            <article class="card feature">
                 <div class="icon pink">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v10H4z"/><path d="M8 19h8M12 15v4"/><path d="m9 10 3-3 3 3"/></svg>
                 </div>
@@ -196,17 +285,18 @@
             <p>九个面板，统一的深色设计。点击截图可以放大查看。</p>
         </div>
         <div class="screen-tabs" role="tablist" aria-label="截图切换">
-            <button class="tab active" data-shot="usage" data-alt="AI 用量面板">AI 用量</button>
-            <button class="tab" data-shot="system" data-alt="系统状态面板">系统</button>
-            <button class="tab" data-shot="calendar" data-alt="日历面板">日历</button>
-            <button class="tab" data-shot="settings" data-alt="设置面板">设置</button>
-            <button class="tab" data-shot="ai" data-alt="AI 用量配置窗口">AI 配置</button>
+            <button class="tab active" role="tab" aria-selected="true" data-shot="earbuds" data-alt="耳机控制面板">耳机</button>
+            <button class="tab" role="tab" aria-selected="false" data-shot="system" data-alt="系统状态面板">系统</button>
+            <button class="tab" role="tab" aria-selected="false" data-shot="usage" data-alt="AI 用量面板">AI 用量</button>
+            <button class="tab" role="tab" aria-selected="false" data-shot="calendar" data-alt="日历面板">日历</button>
+            <button class="tab" role="tab" aria-selected="false" data-shot="settings" data-alt="设置面板">设置</button>
+            <button class="tab" role="tab" aria-selected="false" data-shot="ai" data-alt="AI 用量配置窗口">AI 配置</button>
         </div>
         <div class="screen-stage">
             <div class="shot-frame large">
-                <img class="shot" id="screen-image" src="assets/shot-usage.png" alt="AI 用量面板" width="680" height="590">
+                <img class="shot" id="screen-image" src="assets/shot-earbuds.png" alt="耳机控制面板" width="680" height="504">
             </div>
-            <p class="screen-caption" id="screen-caption">按平台顺序展示额度，接近上限时自动提醒。</p>
+            <p class="screen-caption" id="screen-caption">电量、降噪、EQ、空间音频与查找耳机，都在这一页。</p>
         </div>
     </section>
 
@@ -217,17 +307,17 @@
             <p>没有额外的启动器、账号或云端。WinIsland 直接运行在桌面顶部，只在你需要的时候出现。</p>
             <ul class="check-list">
                 <li><span>✓</span>无边框、无外层窗口，只有岛本身可见</li>
+                <li><span>✓</span>耳机连上 / 断开时自动上岛提示</li>
                 <li><span>✓</span>点击展开，点岛外或按 Esc 收起</li>
                 <li><span>✓</span>全局快捷键 <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>I</kbd></li>
                 <li><span>✓</span>字体大小可选小 / 中 / 大</li>
-                <li><span>✓</span>定时提醒：支持每天 / 工作日 / 每周重复，到点常驻并播放强提醒动画，点击关闭才消失</li>
                 <li><span>✓</span>自动更新：启动时和每 6 小时检查 GitHub Releases，岛上提示，一键下载并重启</li>
                 <li><span>✓</span>单实例运行，再次启动会把命令转发给已运行的岛</li>
             </ul>
         </div>
         <div class="split-visual">
             <div class="shot-frame">
-                <img class="shot" src="assets/shot-system.png" alt="系统状态、音量和耳机控制面板" width="680" height="590" loading="lazy">
+                <img class="shot" src="assets/shot-system.png" alt="系统状态、音量、亮度与耳机控制面板" width="680" height="590" loading="lazy">
             </div>
         </div>
     </section>
@@ -266,13 +356,25 @@
             <h2>常见问题</h2>
         </div>
         <div class="faq-list">
+            <details open>
+                <summary>支持哪些耳机？</summary>
+                <p>OPPO / OnePlus / realme、华为、荣耀、小米 / Redmi、vivo / iQOO、索尼、漫步者 EDIFIER、森海塞尔、三星、Google Pixel Buds、Bose、Nothing、水月雨、AKG、EarFun，共 15 个品牌协议、300+ 型号；另外识别雷蛇、罗技、HyperX、SteelSeries、雷柏、达尔优、迈从、JBL 等 USB / 2.4G 游戏耳机。降噪、EQ、空间音频等具体能力取决于型号与固件，程序只显示耳机真正上报的选项。</p>
+            </details>
+            <details>
+                <summary>为什么 Windows 上看不到耳机功能？</summary>
+                <p>Windows 的蓝牙面板只做连接，不开放厂商私有协议。WinIsland 直接连接耳机自己的控制通道，所以能读到三段电量、降噪档位和 EQ，而这些在系统设置里是没有的。</p>
+            </details>
+            <details>
+                <summary>需要安装耳机官方客户端吗？</summary>
+                <p>不需要。官方客户端、EncoDeck 与本程序通常共用同一条控制通道，同时运行时会争用，关掉其中一个即可。耳机需要先在系统蓝牙里完成配对和连接。</p>
+            </details>
+            <details>
+                <summary>会修改耳机固件或影响保修吗？</summary>
+                <p>不会。只发送厂商 App 也会发送的状态查询与设置命令，不写固件。个别型号的协议会随固件更新变化，失效时只是对应开关不出现，不影响其他功能。</p>
+            </details>
             <details>
                 <summary>需要安装 .NET 吗？</summary>
                 <p>不需要。发布的是自包含单文件版本，下载后直接运行，不会弹出运行时安装提示。</p>
-            </details>
-            <details>
-                <summary>支持哪些耳机？</summary>
-                <p>OPPO / OnePlus / realme、华为 / 荣耀、小米 / Redmi、vivo / iQOO、索尼、漫步者、森海塞尔、三星、Google、Bose、Nothing、AKG、水月雨、EarFun，以及部分 USB 2.4G 游戏耳机。具体可用的降噪、EQ、空间音效取决于型号与固件。</p>
             </details>
             <details>
                 <summary>AI 用量的 Key 安全吗？</summary>
@@ -281,10 +383,6 @@
             <details>
                 <summary>为什么是 GPL-3.0？</summary>
                 <p>多品牌耳机控制基于 GPL-3.0 的 EncoDeck / OppoPods 协议实现，因此整个项目以 GPL-3.0 发布，源码公开。</p>
-            </details>
-            <details>
-                <summary>会和我现在的耳机官方客户端冲突吗？</summary>
-                <p>耳机通常只允许一个厂商控制客户端占用控制通道。同时运行官方客户端、EncoDeck 或本程序时可能争用，关闭其中一个即可。</p>
             </details>
             <details>
                 <summary>有安装版吗？</summary>
