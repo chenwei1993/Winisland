@@ -18,9 +18,10 @@ public sealed class BrightnessService : IDisposable
     private int _zeroStreak;
     private DateTime _ignorePollUntil = DateTime.MinValue;
     private bool _polling;
+    private volatile bool _available;
     private DateTime _nextRetry = DateTime.MinValue;
 
-    public bool IsAvailable => _handle != IntPtr.Zero;
+    public bool IsAvailable => _available;
     public int Percent => _percent;
 
     public event Action<int>? Changed;
@@ -36,7 +37,7 @@ public sealed class BrightnessService : IDisposable
 
     private void TryInitialize()
     {
-        if (_handle != IntPtr.Zero || DateTime.Now < _nextRetry)
+        if (_available || DateTime.Now < _nextRetry)
         {
             return;
         }
@@ -60,7 +61,10 @@ public sealed class BrightnessService : IDisposable
             }
 
             var handle = monitors[0].hPhysicalMonitor;
-            if (handle == IntPtr.Zero || !Native.GetMonitorBrightness(handle, out var min, out var current, out var max) || max <= min)
+            // Some display drivers return a zero physical-monitor handle even though the
+            // DDC/CI APIs work correctly with it. Treat a successful brightness query as
+            // authoritative instead of rejecting the handle up front (same as Twinkle Tray).
+            if (!Native.GetMonitorBrightness(handle, out var min, out var current, out var max) || max <= min)
             {
                 Native.DestroyPhysicalMonitors(count, monitors);
                 _nextRetry = DateTime.Now.AddSeconds(10);
@@ -75,6 +79,7 @@ public sealed class BrightnessService : IDisposable
                 _maximum = max;
                 _percent = (int)Math.Round((current - min) * 100d / (max - min));
                 _lastReported = _percent;
+                _available = true;
             }
 
             _uiTimer.Stop();
@@ -88,7 +93,7 @@ public sealed class BrightnessService : IDisposable
 
     private void Poll()
     {
-        if (Volatile.Read(ref _handle) == IntPtr.Zero || _polling)
+        if (!_available || _polling)
         {
             System.Windows.Application.Current?.Dispatcher.BeginInvoke(new Action(TryInitialize));
             return;
@@ -150,7 +155,7 @@ public sealed class BrightnessService : IDisposable
 
     public void SetPercent(int percent)
     {
-        if (Volatile.Read(ref _handle) == IntPtr.Zero)
+        if (!_available)
         {
             return;
         }
@@ -203,6 +208,7 @@ public sealed class BrightnessService : IDisposable
             }
 
             _handle = IntPtr.Zero;
+            _available = false;
         }
     }
 }

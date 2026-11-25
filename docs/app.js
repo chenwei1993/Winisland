@@ -1,6 +1,6 @@
 (() => {
     const repo = "chenwei1993/Winisland";
-    const fallbackVersion = "1.4.0";
+    const fallbackVersion = "1.4.1";
 
     // ── Latest release ────────────────────────────────────────────────
     const versionHero = document.getElementById("version-hero");
