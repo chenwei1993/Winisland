@@ -39,7 +39,7 @@ public sealed class ServiceHub : IDisposable
         Shelf = new ShelfService(Settings);
         Timers = new TimerService();
         Media = new MediaService();
-        Buds = new BudsService();
+        Buds = new BudsService(Settings);
         Sensors = new MicCameraWatcher();
         Apps = new ForegroundAppWatcher();
         SystemNotifications = new SystemNotificationWatcher();

@@ -928,6 +928,26 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    public bool AutoConnectBuds
+    {
+        get => _s.Settings.Current.AutoConnectBuds;
+        set
+        {
+            if (_s.Settings.Current.AutoConnectBuds == value)
+            {
+                return;
+            }
+
+            _s.Settings.Current.AutoConnectBuds = value;
+            _s.Settings.Save();
+            OnPropertyChanged();
+            if (value)
+            {
+                _ = _s.Buds.AutoConnectPreferredAsync(waitForEnumeration: false);
+            }
+        }
+    }
+
     public BudsService Buds => _s.Buds;
 
     private void SetUiFontSizeMode(int mode)

@@ -237,20 +237,31 @@
                     Visibility="{Binding Buds.HasDevice, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
                     <Grid>
-                        <StackPanel>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,8,0">
                             <TextBlock Text="{Binding Buds.DeviceName}" FontSize="13" FontWeight="SemiBold" />
                             <TextBlock Text="{Binding Buds.StatusText}" Style="{StaticResource Caption}"
                                        TextWrapping="Wrap" MaxWidth="300" HorizontalAlignment="Left"
                                        Margin="0,2,0,0" />
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                            <Button Content="切换设备" Style="{StaticResource GhostButton}" Margin="0,0,6,0"
-                                    Visibility="{Binding Buds.HasMultipleDevices, Converter={StaticResource BoolToVis}}"
-                                    Click="BudsDeviceButton_Click" />
-                            <Button Content="重新连接" Style="{StaticResource GhostButton}"
-                                    Click="BudsReconnect_Click" />
-                        </StackPanel>
+                        <Button Grid.Column="1" Content="切换设备" Style="{StaticResource GhostButton}"
+                                HorizontalAlignment="Right" VerticalAlignment="Center"
+                                Visibility="{Binding Buds.HasMultipleDevices, Converter={StaticResource BoolToVis}}"
+                                Click="BudsDeviceButton_Click" />
                     </Grid>
+
+                    <WrapPanel Margin="0,8,0,0" HorizontalAlignment="Right"
+                               Visibility="{Binding Buds.SupportsConnectionActions, Converter={StaticResource BoolToVis}}">
+                        <Button Content="{Binding Buds.PreferredButtonText}" Style="{StaticResource GhostButton}"
+                                IsEnabled="{Binding Buds.CanSetPreferredDevice}" Margin="0,0,6,0"
+                                Click="BudsPreferred_Click" />
+                        <Button Content="{Binding Buds.ConnectionActionText}" Style="{StaticResource GhostButton}"
+                                IsEnabled="{Binding Buds.CanUseConnectionActions}"
+                                Click="BudsConnection_Click" />
+                    </WrapPanel>
 
                     <Border x:Name="BudsDeviceMenu" Visibility="Collapsed" Background="#0FFFFFFF"
                             BorderBrush="#14FFFFFF" BorderThickness="1" CornerRadius="10" Padding="5" Margin="0,7,0,0">

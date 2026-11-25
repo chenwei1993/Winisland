@@ -24,11 +24,13 @@ namespace WinIsland.Services;
 public sealed class BudsService : INotifyPropertyChanged, IDisposable
 {
     private readonly Dispatcher _dispatcher;
+    private readonly SettingsService _settings;
     private readonly DeviceStateStore _store = new();
     private readonly DeviceManager _manager;
     private readonly EventHandler<DeviceStateChangedEventArgs> _stateChangedHandler;
     private readonly EventHandler _knownDevicesChangedHandler;
     private readonly EventHandler<DeviceIdentity> _linkConnectedHandler;
+    private readonly CancellationTokenSource _lifetime = new();
 
     private bool _started;
     private bool _disposed;
@@ -36,9 +38,12 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
     private bool _leftLowAlerted;
     private bool _rightLowAlerted;
     private bool? _lastLinkUp;
+    private bool _connectionBusy;
+    private string? _connectionMessage;
 
-    public BudsService()
+    public BudsService(SettingsService settings)
     {
+        _settings = settings;
         _dispatcher = Dispatcher.CurrentDispatcher;
         LeAudioOnlyDevices.Configure(Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -50,9 +55,10 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
             registry,
             _store,
             new RfcommChannelConnector(registry),
-            preferredDeviceId: () => null,
+            preferredDeviceId: () => _settings.Current.PreferredBudsDeviceId,
             allowExperimental: () => false,
-            NullLoggerFactory.Instance);
+            NullLoggerFactory.Instance,
+            disconnected: new PersistedDisconnectedDevices(_settings));
 
         _stateChangedHandler = (_, _) => QueueRefresh();
         _knownDevicesChangedHandler = (_, _) => QueueRefresh();
@@ -80,6 +86,7 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
 
         _started = true;
         _manager.Start();
+        _ = AutoConnectPreferredAsync();
     }
 
     private DeviceState State => _store.Current;
@@ -89,6 +96,54 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
     public bool HasDevice => State.Device is not null || _manager.KnownDevices.Count > 0;
 
     public bool IsConnected => State.Connection == DeviceConnectionState.ControlReady;
+
+    public bool IsLinkUp => State.Connection.IsLinkUp();
+
+    public bool SupportsConnectionActions =>
+        State.Device is { Transport: DeviceTransport.Bluetooth };
+
+    public bool CanUseConnectionActions =>
+        SupportsConnectionActions &&
+        !_connectionBusy &&
+        State.Connection is not (
+            DeviceConnectionState.AudioConnected or
+            DeviceConnectionState.ControlConnecting or
+            DeviceConnectionState.Reconnecting);
+
+    public bool IsConnectionBusy => _connectionBusy;
+
+    public string ConnectionActionText
+    {
+        get
+        {
+            if (_connectionBusy)
+            {
+                return "处理中…";
+            }
+
+            return State.Connection switch
+            {
+                DeviceConnectionState.ControlReady => "断开连接",
+                DeviceConnectionState.ControlUnavailable => "重新连接",
+                DeviceConnectionState.AudioConnected or
+                    DeviceConnectionState.ControlConnecting or
+                    DeviceConnectionState.Reconnecting => "连接中…",
+                DeviceConnectionState.PairedNotConnected or
+                    DeviceConnectionState.Disconnected or
+                    DeviceConnectionState.DisconnectedByUser => "连接耳机",
+                _ => IsLinkUp ? "断开连接" : "连接耳机"
+            };
+        }
+    }
+
+    public bool IsPreferredDevice =>
+        State.Device is { Transport: DeviceTransport.Bluetooth } device &&
+        string.Equals(_settings.Current.PreferredBudsDeviceId, device.DeviceId, StringComparison.Ordinal);
+
+    public bool CanSetPreferredDevice =>
+        State.Device is { Transport: DeviceTransport.Bluetooth } && !IsPreferredDevice;
+
+    public string PreferredButtonText => IsPreferredDevice ? "已设为首选" : "设为首选";
 
     public string DeviceName
     {
@@ -118,7 +173,7 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
                 return "未找到已配对的耳机";
             }
 
-            return State.Connection switch
+            var text = State.Connection switch
             {
                 DeviceConnectionState.PairedNotConnected => "已配对，等待连接",
                 DeviceConnectionState.AudioConnected => "已连接，正在打开控制通道…",
@@ -132,6 +187,10 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
                 DeviceConnectionState.UsbHeadsetConnected => $"USB 耳机已连接 · {DetailText}",
                 _ => "等待系统蓝牙连接"
             };
+
+            return string.IsNullOrWhiteSpace(_connectionMessage)
+                ? text
+                : $"{text} · {_connectionMessage}";
         }
     }
 
@@ -329,44 +388,178 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
         _ = _manager.RunFitTestAsync();
     }
 
-    public async Task ReconnectAsync()
+    /// <summary>Connects, retries, or disconnects the active Bluetooth earbuds.</summary>
+    public async Task ToggleConnectionAsync()
     {
-        try
+        if (_connectionBusy || State.Device is not { Transport: DeviceTransport.Bluetooth } device)
         {
-            if (State.Device is { } device)
-            {
-                await _manager.ConnectDeviceAsync(device.DeviceId);
-            }
-            else
-            {
-                await _manager.ReconnectAsync();
-            }
-        }
-        catch
-        {
-            // The state store exposes the failure.
+            return;
         }
 
+        RememberPreferredDevice(device.DeviceId);
+        await RunConnectionActionAsync(async () =>
+        {
+            return State.Connection switch
+            {
+                DeviceConnectionState.ControlReady =>
+                    await _manager.DisconnectDeviceAsync(device.DeviceId),
+                DeviceConnectionState.ControlUnavailable =>
+                    await RetryOrConnectAsync(device.DeviceId),
+                _ => await _manager.ConnectDeviceAsync(device.DeviceId)
+            };
+        });
+    }
+
+    /// <summary>Remembers the active earbuds and optionally connects them if auto-connect is enabled.</summary>
+    public void SetPreferredDevice()
+    {
+        if (State.Device is not { Transport: DeviceTransport.Bluetooth } device)
+        {
+            return;
+        }
+
+        RememberPreferredDevice(device.DeviceId);
         QueueRefresh();
+        if (_settings.Current.AutoConnectBuds && !State.Connection.IsLinkUp())
+        {
+            _ = AutoConnectPreferredAsync(waitForEnumeration: false);
+        }
     }
 
     public async Task SelectDeviceAsync(BudsDeviceOption option)
     {
-        try
+        RememberPreferredDevice(option.Id);
+        await RunConnectionActionAsync(async () =>
         {
             await _manager.SelectDeviceAsync(option.Id);
-            if (!option.IsConnected)
+            return !option.IsConnected
+                ? await _manager.ConnectDeviceAsync(option.Id)
+                : EncoDeck.Core.Commands.CommandResult.Ok;
+        });
+    }
+
+    /// <summary>
+    /// Connects the remembered earbuds once after startup when auto-connect is enabled.
+    /// Devices explicitly disconnected by the user are left alone.
+    /// </summary>
+    public async Task AutoConnectPreferredAsync(bool waitForEnumeration = true)
+    {
+        if (!_settings.Current.AutoConnectBuds || _disposed || _connectionBusy)
+        {
+            return;
+        }
+
+        var deviceId = _settings.Current.PreferredBudsDeviceId;
+        if (string.IsNullOrWhiteSpace(deviceId))
+        {
+            return;
+        }
+
+        if (waitForEnumeration)
+        {
+            for (var attempt = 0; attempt < 12 && !_disposed; attempt++)
             {
-                await _manager.ConnectDeviceAsync(option.Id);
+                if (_manager.KnownDevices.Any(d => string.Equals(
+                        d.Identity.DeviceId,
+                        deviceId,
+                        StringComparison.Ordinal)))
+                {
+                    break;
+                }
+
+                try
+                {
+                    await Task.Delay(500, _lifetime.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
             }
+        }
+
+        if (_disposed ||
+            !_settings.Current.AutoConnectBuds ||
+            !string.Equals(_settings.Current.PreferredBudsDeviceId, deviceId, StringComparison.Ordinal) ||
+            (string.Equals(State.Device?.DeviceId, deviceId, StringComparison.Ordinal) &&
+             State.Connection.IsLinkUp()))
+        {
+            return;
+        }
+
+        var known = _manager.KnownDevices.FirstOrDefault(d =>
+            string.Equals(d.Identity.DeviceId, deviceId, StringComparison.Ordinal));
+        if (known is null || known.IsDisconnectedByUser || known.Identity.Transport != DeviceTransport.Bluetooth)
+        {
+            return;
+        }
+
+        await RunConnectionActionAsync(async () =>
+        {
+            if (known.IsConnected)
+            {
+                await _manager.SelectDeviceAsync(deviceId);
+                return EncoDeck.Core.Commands.CommandResult.Ok;
+            }
+
+            return await _manager.ConnectDeviceAsync(deviceId);
+        });
+    }
+
+    private async Task<EncoDeck.Core.Commands.CommandResult> RetryOrConnectAsync(string deviceId)
+    {
+        var result = await _manager.ReconnectAsync();
+        return result.Status == EncoDeck.Core.Commands.CommandStatus.NotConnected
+            ? await _manager.ConnectDeviceAsync(deviceId)
+            : result;
+    }
+
+    private async Task RunConnectionActionAsync(Func<Task<EncoDeck.Core.Commands.CommandResult>> action)
+    {
+        if (_connectionBusy)
+        {
+            return;
+        }
+
+        _connectionBusy = true;
+        _connectionMessage = null;
+        QueueRefresh();
+        try
+        {
+            var result = await action();
+            _connectionMessage = result.IsSuccess ? null : DescribeConnectionFailure(result);
         }
         catch
         {
-            // The state store exposes the failure.
+            _connectionMessage = "操作失败，请确认耳机已配对且在附近";
+        }
+        finally
+        {
+            _connectionBusy = false;
+            QueueRefresh();
+        }
+    }
+
+    private void RememberPreferredDevice(string deviceId)
+    {
+        if (string.Equals(_settings.Current.PreferredBudsDeviceId, deviceId, StringComparison.Ordinal))
+        {
+            return;
         }
 
-        QueueRefresh();
+        _settings.Current.PreferredBudsDeviceId = deviceId;
+        _settings.Save();
     }
+
+    private static string DescribeConnectionFailure(EncoDeck.Core.Commands.CommandResult result) =>
+        result.Status switch
+        {
+            EncoDeck.Core.Commands.CommandStatus.Timeout => "连接超时，请重试",
+            EncoDeck.Core.Commands.CommandStatus.TransportError => "蓝牙连接失败，请重试",
+            EncoDeck.Core.Commands.CommandStatus.NotConnected => "未找到可连接的耳机",
+            EncoDeck.Core.Commands.CommandStatus.Unsupported => "当前耳机不支持此操作",
+            _ => "操作失败，请重试"
+        };
 
     public void Refresh()
     {
@@ -517,7 +710,11 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
                 if (!string.Equals(Devices[i].Id, known[i].Identity.DeviceId, StringComparison.Ordinal) ||
                     !string.Equals(Devices[i].Name, known[i].Identity.Name, StringComparison.Ordinal) ||
                     Devices[i].IsConnected != known[i].IsConnected ||
-                    Devices[i].IsActive != known[i].IsActive)
+                    Devices[i].IsActive != known[i].IsActive ||
+                    Devices[i].IsPreferred != string.Equals(
+                        _settings.Current.PreferredBudsDeviceId,
+                        known[i].Identity.DeviceId,
+                        StringComparison.Ordinal))
                 {
                     same = false;
                     break;
@@ -535,7 +732,11 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
                     Id = device.Identity.DeviceId,
                     Name = device.Identity.Name,
                     IsConnected = device.IsConnected,
-                    IsActive = device.IsActive
+                    IsActive = device.IsActive,
+                    IsPreferred = string.Equals(
+                        _settings.Current.PreferredBudsDeviceId,
+                        device.Identity.DeviceId,
+                        StringComparison.Ordinal)
                 });
             }
         }
@@ -716,6 +917,48 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
 
     private static string FormatBattery(int? level) => level is null ? "--" : $"{level}%";
 
+    private sealed class PersistedDisconnectedDevices : IUserDisconnectedDevices
+    {
+        private readonly SettingsService _settings;
+        private readonly object _gate = new();
+
+        public PersistedDisconnectedDevices(SettingsService settings)
+        {
+            _settings = settings;
+        }
+
+        public bool Contains(string deviceId)
+        {
+            lock (_gate)
+            {
+                return _settings.Current.BudsDisconnectedDeviceIds?.Any(id =>
+                    string.Equals(id, deviceId, StringComparison.Ordinal)) == true;
+            }
+        }
+
+        public void Set(string deviceId, bool disconnected)
+        {
+            lock (_gate)
+            {
+                var ids = _settings.Current.BudsDisconnectedDeviceIds ??= new();
+                var index = ids.FindIndex(id => string.Equals(id, deviceId, StringComparison.Ordinal));
+                if (disconnected)
+                {
+                    if (index < 0)
+                    {
+                        ids.Add(deviceId);
+                        _settings.Save();
+                    }
+                }
+                else if (index >= 0)
+                {
+                    ids.RemoveAt(index);
+                    _settings.Save();
+                }
+            }
+        }
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -725,6 +968,7 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
 
         _disposed = true;
         _started = false;
+        _lifetime.Cancel();
         _store.StateChanged -= _stateChangedHandler;
         _manager.KnownDevicesChanged -= _knownDevicesChangedHandler;
         _manager.ActiveDeviceLinkConnected -= _linkConnectedHandler;
@@ -737,5 +981,7 @@ public sealed class BudsService : INotifyPropertyChanged, IDisposable
         {
             // Best effort shutdown.
         }
+
+        _lifetime.Dispose();
     }
 }

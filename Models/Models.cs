@@ -130,8 +130,11 @@ public sealed class BudsDeviceOption
     public required string Name { get; init; }
     public bool IsConnected { get; init; }
     public bool IsActive { get; init; }
+    public bool IsPreferred { get; init; }
     public string CheckGlyph => IsActive ? "\uE73E" : string.Empty;
-    public string StateText => IsActive ? "当前" : IsConnected ? "已连接" : "未连接";
+    public string StateText => IsActive
+        ? IsPreferred ? "当前 · 首选" : "当前"
+        : IsPreferred ? "首选" : IsConnected ? "已连接" : "未连接";
 }
 
 public sealed class AudioOutputDevice

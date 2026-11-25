@@ -118,6 +118,21 @@
                 </Grid>
             </Border>
 
+            <TextBlock Text="耳机" Style="{StaticResource PaneTitle}" FontSize="14.5" Margin="2,12,0,7" />
+
+            <Border Style="{StaticResource Card}" Padding="12,9" Margin="0,0,0,6">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="自动连接首选耳机" FontSize="13" />
+                        <TextBlock Text="启动时连接已配对的首选耳机；首次配对仍需在 Windows 蓝牙设置中完成"
+                                   Style="{StaticResource Caption}" Margin="0,2,0,0"
+                                   TextWrapping="Wrap" MaxWidth="280" HorizontalAlignment="Left" />
+                    </StackPanel>
+                    <CheckBox Style="{StaticResource Switch}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                              IsChecked="{Binding AutoConnectBuds, Mode=TwoWay}" />
+                </Grid>
+            </Border>
+
             <TextBlock Text="AI 用量" Style="{StaticResource PaneTitle}" FontSize="14.5" Margin="2,12,0,7" />
 
             <Border Style="{StaticResource Card}" Padding="12,9" Margin="0,0,0,6">

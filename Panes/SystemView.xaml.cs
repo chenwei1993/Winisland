@@ -92,9 +92,14 @@ public partial class SystemView : UserControl
         App.Services.Audio.SetDefaultDevice(device.Id);
     }
 
-    private async void BudsReconnect_Click(object sender, RoutedEventArgs e)
+    private async void BudsConnection_Click(object sender, RoutedEventArgs e)
     {
-        await App.Services.Buds.ReconnectAsync();
+        await App.Services.Buds.ToggleConnectionAsync();
+    }
+
+    private void BudsPreferred_Click(object sender, RoutedEventArgs e)
+    {
+        App.Services.Buds.SetPreferredDevice();
     }
 
     private void BudsDeviceButton_Click(object sender, RoutedEventArgs e)

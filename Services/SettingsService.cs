@@ -25,6 +25,16 @@ public sealed class AppSettings
     public bool SmartAvoidWindows { get; set; }
     public bool ShowAppSwitches { get; set; }
 
+    // ── Earbuds ─────────────────────────────────────────────────────────
+    /// <summary>Paired earbuds selected by the user as the preferred device.</summary>
+    public string? PreferredBudsDeviceId { get; set; }
+
+    /// <summary>Connect the preferred earbuds when WinIsland starts.</summary>
+    public bool AutoConnectBuds { get; set; } = true;
+
+    /// <summary>Devices explicitly disconnected in WinIsland; left alone until the user connects them again.</summary>
+    public List<string> BudsDisconnectedDeviceIds { get; set; } = new();
+
     /// <summary>0 = small, 1 = medium, 2 = large.</summary>
     public int UiFontSizeMode { get; set; } = 1;
 
@@ -49,7 +59,9 @@ public sealed class AppSettings
 
 public sealed class SettingsService
 {
-    private const int CurrentVersion = 6;
+    private const int CurrentVersion = 7;
+
+    private readonly object _saveGate = new();
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -135,6 +147,14 @@ public sealed class SettingsService
                     migrated = true;
                 }
 
+                if (Current.Version < 7)
+                {
+                    // v7 adds preferred earbuds and startup auto-connect.
+                    Current.BudsDisconnectedDeviceIds ??= new();
+                    Current.Version = 7;
+                    migrated = true;
+                }
+
                 if (migrated)
                 {
                     Save();
@@ -158,14 +178,17 @@ public sealed class SettingsService
 
     public void Save()
     {
-        try
+        lock (_saveGate)
         {
-            Directory.CreateDirectory(DataDirectory);
-            File.WriteAllText(SettingsPath, JsonSerializer.Serialize(Current, JsonOptions));
-        }
-        catch
-        {
-            // Settings are best effort only.
+            try
+            {
+                Directory.CreateDirectory(DataDirectory);
+                File.WriteAllText(SettingsPath, JsonSerializer.Serialize(Current, JsonOptions));
+            }
+            catch
+            {
+                // Settings are best effort only.
+            }
         }
     }
 }
